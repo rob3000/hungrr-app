@@ -1,9 +1,31 @@
 import { useNavigation } from '@react-navigation/native';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 export default function Overview() {
   const navigation = useNavigation();
+  const { logout } = useAuth();
+
+  const handleProfilePress = () => {
+    Alert.alert(
+      'Profile Menu',
+      'What would you like to do?',
+      [
+        { text: 'View Profile', onPress: () => {} },
+        { text: 'Settings', onPress: () => {} },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            navigation.navigate('Login');
+          }
+        },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
+  };
 
   const weekDays = [
     { day: 'MON', date: '22' },
@@ -26,7 +48,7 @@ export default function Overview() {
         <View className="px-6 mb-6">
           <View className="flex-row justify-between">
             {weekDays.map((item, index) => (
-              <View key={index} className={`items-center rounded-full ${
+              <View key={index} className={`items-center p-3 rounded-3xl  ${
                   item.isToday ? 'bg-[#2d4a3e]' : 'bg-transparent'
                 }`}>
                 <Text className={`text-xs font-medium mb-2 ${item.isToday ? 'text-white' : 'text-gray-500'}`}>
@@ -60,8 +82,8 @@ export default function Overview() {
             
             <Text className="text-white text-2xl font-bold mb-6">Interval Run Session</Text>
             
-            <View className="flex-row space-x-4">
-              <View className="bg-[#ffffff1a] rounded-2xl px-4 py-3 flex-1">
+            <View className="flex-row space-4">
+              <View className="bg-[#ffffff1a] rounded-2xl px-4 py-3 flex-1 mr-6">
                 <Text className="text-green-200 text-xs font-medium mb-1">START</Text>
                 <Text className="text-white text-lg font-semibold">5:00 PM</Text>
               </View>
@@ -121,7 +143,10 @@ export default function Overview() {
           </View>
           
           {/* Pre-session meal */}
-          <View className="bg-white rounded-2xl p-4 mb-3">
+          <TouchableOpacity 
+            className="bg-white rounded-2xl p-4 mb-3"
+            onPress={() => (navigation as any).navigate('RecipeDetail')}
+          >
             <View className="flex-row items-center">
               <View className="w-12 h-12 rounded-full bg-gray-200 mr-4 overflow-hidden">
                 <Image 
@@ -140,10 +165,10 @@ export default function Overview() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </View>
-          </View>
+          </TouchableOpacity>
           
           {/* Post-session meal */}
-          <View className="bg-white rounded-2xl p-4">
+          <TouchableOpacity className="bg-white rounded-2xl p-4">
             <View className="flex-row items-center">
               <View className="w-12 h-12 rounded-full bg-gray-200 mr-4 overflow-hidden">
                 <Image 
@@ -162,7 +187,7 @@ export default function Overview() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Bottom spacing for navigation */}
@@ -171,7 +196,7 @@ export default function Overview() {
 
       {/* Bottom Navigation */}
       <View className="absolute bottom-0 left-0 right-0">
-        <View className="bg-green-700 mx-6 mb-6 rounded-full flex-row items-center justify-around py-4">
+        <View className="bg-[#2d4a3e] mx-6 mb-6 rounded-full flex-row items-center justify-around py-4">
           <TouchableOpacity className="items-center">
             <Ionicons name="home" size={24} color="white" />
             <Text className="text-white text-xs mt-1">HOME</Text>

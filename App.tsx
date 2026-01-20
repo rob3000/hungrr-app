@@ -7,7 +7,9 @@ import { useMemo } from 'react';
 import 'react-native-gesture-handler';
 
 import Navigation from './navigation';
+import { AuthProvider } from './context/AuthContext';
 
+import { vars } from 'nativewind'
 
 const MyTheme = {
   ...DefaultTheme,
@@ -33,12 +35,16 @@ const MyDarkTheme = {
     border: 'rgb(216, 216, 216)',
     notification: 'rgb(255, 59, 48)',
   },
-}
+};
 
 
 export default function App() {
   const colorScheme = useColorScheme();
   const theme = useMemo(() => (colorScheme === 'dark' ? MyDarkTheme : MyTheme), [colorScheme]);
 
-  return <Navigation theme={theme} />;
+  return (
+    <AuthProvider>
+      <Navigation theme={theme} />
+    </AuthProvider>
+  );
 }

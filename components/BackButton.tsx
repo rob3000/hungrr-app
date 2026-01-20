@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 export const BackButton = ({ onPress }: { onPress: () => void }) => {
   return (
     <View className={styles.backButton}>
-      <Feather name="chevron-left" size={16} color="#007AFF" />
+      <Feather name="chevron-left" size={16} />
       <Text className={styles.backButtonText} onPress={onPress}>
         Back
       </Text>
@@ -13,6 +13,6 @@ export const BackButton = ({ onPress }: { onPress: () => void }) => {
 };
 
 const styles = {
-  backButton: 'flex-row',
-  backButtonText: 'text-blue-500 ml-1',
+  backButton: 'flex-row mr-4',
+  backButtonText: 'ml-1',
 };
