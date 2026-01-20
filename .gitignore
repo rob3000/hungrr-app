@@ -10,8 +10,14 @@ npm-debug.*
 *.orig.*
 web-build/
 
+# Environment variables
+.env
+.env.local
+.env.*.local
 
-
+# Keystore files
+*.keystore
+keystore-base64.txt
 
 ios
 android

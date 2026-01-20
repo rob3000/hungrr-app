@@ -45,7 +45,7 @@ export default function RecipeDetailScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-[#f3eee5]">
       <ScrollView className="flex-1">
         {/* Hero Image */}
         <View className="relative">

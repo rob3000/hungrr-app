@@ -1,168 +1,183 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../services/api';
 
 export default function SignupScreen() {
   const navigation = useNavigation();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSignup = () => {
-    const { name, email, password, confirmPassword } = formData;
-    
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    
-    if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
-    
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-    
-    // In real app, you'd create account with backend
-    Alert.alert('Success', 'Account created successfully!', [
-      { 
-        text: 'OK', 
-        onPress: () => {
-          login();
-          navigation.navigate('Overview');
-        }
-      }
-    ]);
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleSignup = async () => {
+    // Clear previous error
+    setError(null);
+
+    // Validate name
+    if (!name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      setError('Name must be at least 2 characters');
+      return;
+    }
+
+    // Validate email
+    if (!email.trim()) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    if (!isValidEmail(email.trim())) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Call API to send OTP for signup
+      const response = await apiClient.sendOTP({
+        email: email.trim(),
+        name: name.trim(),
+        isSignup: true,
+      });
+
+      if (response.success && response.data) {
+        // Navigate to OTP verification screen with signup flag
+        (navigation as any).navigate('OTPVerification', {
+          email: email.trim(),
+          sessionToken: response.data.session_token,
+          name: name.trim(),
+          isSignup: true,
+        });
+      } else {
+        // Show error message
+        setError(response.error?.message || 'Failed to send verification code. Please try again.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Error sending OTP:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <View className="flex-1">
-      <ScrollView className="flex-1">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-[#f3eee5]"
+    >
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+        {/* Back Button */}
+        <View className="px-6 pt-12">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="mb-4"
+            disabled={isLoading}
+          >
+            <Ionicons name="arrow-back" size={24} color="#2d4a3e" />
+          </TouchableOpacity>
+        </View>
+
         {/* Header */}
-        <View className="items-center pt-16 pb-8">
-           <Image 
-              source={require('../assets/logo.png')} 
-              height={8} width={8} resizeMode="contain" className='w-44'
-            />
-          <Text className="text-3xl font-bold text-primary">Fuel your journey</Text>
+        <View className="items-center px-6 pb-8">
+          <Image 
+            source={require('../assets/logo.png')} 
+            height={8} 
+            width={8} 
+            resizeMode="contain" 
+            className='w-44 mb-4'
+          />
+          <Text className="text-3xl font-bold text-[#2d4a3e] mb-2">Create Account</Text>
+          <Text className="text-gray-600 text-center">
+            Join hungrr to discover IBS-safe foods
+          </Text>
         </View>
 
         {/* Signup Form */}
         <View className="px-6">
-          <View className="rounded-3xl p-6 mb-6">
-            
-            {/* Name Input */}
-            <View className="mb-4">
-              <Text className="text-gray-700 text-sm font-medium mb-2">Full Name</Text>
-              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
-                <Ionicons name="person-outline" size={20} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 text-gray-900"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChangeText={(value) => updateFormData('name', value)}
-                />
-              </View>
+          {/* Name Input */}
+          <View className="mb-4">
+            <Text className="text-gray-700 text-sm font-medium mb-2">Full Name</Text>
+            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
+              <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+              <TextInput
+                className="flex-1 ml-3 text-gray-900"
+                placeholder="Enter your full name"
+                placeholderTextColor="#9CA3AF"
+                value={name}
+                onChangeText={setName}
+                editable={!isLoading}
+              />
             </View>
-
-            {/* Email Input */}
-            <View className="mb-4">
-              <Text className="text-gray-700 text-sm font-medium mb-2">Email</Text>
-              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
-                <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 text-gray-900"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChangeText={(value) => updateFormData('email', value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
-
-            {/* Password Input */}
-            <View className="mb-4">
-              <Text className="text-gray-700 text-sm font-medium mb-2">Password</Text>
-              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
-                <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 text-gray-900"
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChangeText={(value) => updateFormData('password', value)}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons 
-                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color="#9CA3AF" 
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Confirm Password Input */}
-            <View className="mb-6">
-              <Text className="text-gray-700 text-sm font-medium mb-2">Confirm Password</Text>
-              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
-                <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
-                <TextInput
-                  className="flex-1 ml-3 text-gray-900"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChangeText={(value) => updateFormData('confirmPassword', value)}
-                  secureTextEntry={!showConfirmPassword}
-                />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                  <Ionicons 
-                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color="#9CA3AF" 
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Signup Button */}
-            <TouchableOpacity
-              className="bg-green-700 rounded-2xl py-4 items-center mb-4"
-              onPress={handleSignup}
-            >
-              <Text className="text-white font-semibold text-lg">Create Account</Text>
-            </TouchableOpacity>
           </View>
+
+          {/* Email Input */}
+          <View className="mb-6">
+            <Text className="text-gray-700 text-sm font-medium mb-2">Email Address</Text>
+            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
+              <TextInput
+                className="flex-1 ml-3 text-gray-900"
+                placeholder="Enter your email"
+                placeholderTextColor="#9CA3AF"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!isLoading}
+              />
+            </View>
+          </View>
+
+          {/* Error Message */}
+          {error && (
+            <View className="flex-row items-center mb-4 bg-red-50 rounded-xl p-3">
+              <Ionicons name="alert-circle" size={20} color="#EF4444" />
+              <Text className="text-red-500 text-sm ml-2 flex-1">{error}</Text>
+            </View>
+          )}
+
+          {/* Signup Button */}
+          <TouchableOpacity
+            className={`rounded-2xl py-4 items-center mb-6 ${
+              isLoading ? 'bg-gray-400' : 'bg-[#2d4a3e]'
+            }`}
+            onPress={handleSignup}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-semibold text-lg">Continue</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Privacy Notice */}
+          <Text className="text-xs text-gray-500 text-center mb-6 px-4">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </Text>
 
           {/* Login Link */}
           <View className="flex-row justify-center items-center mb-8">
             <Text className="text-gray-600">Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text className="text-green-700 font-semibold">Sign In</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login' as never)} disabled={isLoading}>
+              <Text className="text-[#2d4a3e] font-semibold">Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

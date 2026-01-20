@@ -1,83 +1,345 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, Linking, ActivityIndicator, ToastAndroid, Platform, TextInput, Modal } from 'react-native';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { apiClient } from '../services/api';
+import ScanLimiterService from '../services/scan-limiter';
+import { useSubscription } from '../context/SubscriptionContext';
+import SubscriptionModal from '../components/SubscriptionModal';
 
 export default function CameraScreen() {
   const navigation = useNavigation();
-  const [hasPermission, setHasPermission] = useState(false);
+  const { isPro } = useSubscription();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [scanFeedback, setScanFeedback] = useState<string>('');
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualBarcode, setManualBarcode] = useState('');
   const device = useCameraDevice('back');
 
   useEffect(() => {
     checkCameraPermission();
   }, []);
 
-  const checkCameraPermission = async () => {
-    const status = await Camera.getCameraPermissionStatus();
-    if (status === 'granted') {
-      setHasPermission(true);
+  const showToast = (message: string) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.LONG);
     } else {
-      const permission = await Camera.requestCameraPermission();
-      setHasPermission(permission === 'granted');
+      // For iOS, use Alert as a fallback
+      Alert.alert('', message, [{ text: 'OK' }], { cancelable: true });
     }
   };
 
-  // Mock database of known products
-  const knownProducts = [
-    '058449880011', // Nature's Path Oats
-    '1234567890123', // Mock barcode 1
-    '9876543210987', // Mock barcode 2
-  ];
+  const checkCameraPermission = async () => {
+    try {
+      const status = await Camera.getCameraPermissionStatus();
+      
+      if (status === 'granted') {
+        setHasPermission(true);
+      } else if (status === 'not-determined') {
+        // Request permission
+        const permission = await Camera.requestCameraPermission();
+        setHasPermission(permission === 'granted');
+        
+        if (permission === 'denied') {
+          Alert.alert(
+            'Camera Permission Required',
+            'Camera access is needed to scan product barcodes. Please enable it in your device settings.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => Linking.openSettings() }
+            ]
+          );
+        }
+      } else {
+        // Permission was previously denied
+        setHasPermission(false);
+      }
+    } catch (error) {
+      console.error('Error checking camera permission:', error);
+      setHasPermission(false);
+      Alert.alert('Error', 'Failed to check camera permissions. Please try again.');
+    }
+  };
 
-  const handleBarcodeScanned = (codes: any[]) => {
-    if (!isScanning || codes.length === 0) return;
+  const handleBarcodeScanned = async (codes: any[]) => {
+    if (!isScanning || codes.length === 0 || isProcessing) return;
     
-    setIsScanning(false);
     const barcode = codes[0];
     const barcodeValue = barcode.value;
     
-    // Simulate API lookup delay
-    setTimeout(() => {
-      if (knownProducts.includes(barcodeValue)) {
-        // Product found - navigate to product detail
-        (navigation as any).navigate('ProductDetail', { barcode: barcodeValue });
+    if (!barcodeValue) return;
+    
+    // Check if user can scan (for free users)
+    if (!isPro) {
+      const canScan = await ScanLimiterService.canScan(isPro);
+      
+      if (!canScan) {
+        // User has reached their scan limit
+        setIsScanning(false);
+        setShowSubscriptionModal(true);
+        return;
+      }
+    }
+    
+    // Prevent multiple scans
+    setIsScanning(false);
+    setIsProcessing(true);
+    setScanFeedback('Scanning...');
+    
+    try {
+      // Call the API to look up the product
+      const response = await apiClient.scanProduct(barcodeValue);
+      console.info("scan result!", response)
+      if (response.success && response.data) {
+        setScanFeedback('Product found!');
+        
+        // Decrement scan count for free users after successful scan
+        if (!isPro) {
+          const scansRemaining = await ScanLimiterService.decrementScans();
+          
+          // Show warning toast if 3 or fewer scans remaining
+          if (scansRemaining <= 3 && scansRemaining > 0) {
+            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
+          }
+        }
+
+        // Navigate to product detail screen
+        setTimeout(() => {
+          (navigation as any).navigate('ProductDetail', { product: response.data?.product });
+          setIsProcessing(false);
+          setScanFeedback('');
+        }, 500);
       } else {
         // Product not found - navigate to add product screen
-        (navigation as any).navigate('AddProduct', { barcode: barcodeValue });
+        setScanFeedback('Product not found');
+        
+        // Decrement scan count for free users even if product not found
+        if (!isPro) {
+          const scansRemaining = await ScanLimiterService.decrementScans();
+          
+          // Show warning toast if 3 or fewer scans remaining
+          if (scansRemaining <= 3 && scansRemaining > 0) {
+            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
+          }
+        }
+        
+        setTimeout(() => {
+          (navigation as any).navigate('AddProduct', { barcode: barcodeValue });
+          setIsProcessing(false);
+          setScanFeedback('');
+        }, 500);
       }
-    }, 500);
-  };
-
-  const codeScanner = useCodeScanner({
-    codeTypes: ['qr', 'ean-13', 'ean-8', 'code-128', 'code-39', 'upc-a', 'upc-e'],
-    onCodeScanned: handleBarcodeScanned,
-  });
-
-  const handleManualScan = () => {
-    // Simulate scanning a known product
-    const mockBarcode = Math.random() > 0.5 ? '058449880011' : 'unknown123456789';
-    
-    if (knownProducts.includes(mockBarcode)) {
-      (navigation as any).navigate('ProductDetail', { barcode: mockBarcode });
-    } else {
-      (navigation as any).navigate('AddProduct', { barcode: mockBarcode });
+    } catch (error) {
+      console.error('Error scanning barcode:', error);
+      setScanFeedback('Scan failed');
+      
+      Alert.alert(
+        'Scan Error',
+        'Failed to look up product. Please try again.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              setIsScanning(true);
+              setIsProcessing(false);
+              setScanFeedback('');
+            }
+          }
+        ]
+      );
     }
   };
 
-  if (!hasPermission) {
+  const handleManualBarcodeSubmit = async () => {
+    if (!manualBarcode.trim()) {
+      Alert.alert('Error', 'Please enter a barcode');
+      return;
+    }
+
+    // Check if user can scan (for free users)
+    if (!isPro) {
+      const canScan = await ScanLimiterService.canScan(isPro);
+      
+      if (!canScan) {
+        setShowManualEntry(false);
+        setShowSubscriptionModal(true);
+        return;
+      }
+    }
+
+    setShowManualEntry(false);
+    setIsProcessing(true);
+    setScanFeedback('Looking up barcode...');
+    
+    try {
+      const response = await apiClient.scanProduct(manualBarcode.trim());
+      console.info('MANUAL BARCODE!', response)
+      if (response.success && response.data) {
+        setScanFeedback('Product found!');
+        
+        // Decrement scan count for free users after successful scan
+        if (!isPro) {
+          const scansRemaining = await ScanLimiterService.decrementScans();
+          
+          if (scansRemaining <= 3 && scansRemaining > 0) {
+            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
+          }
+        }
+        
+        setTimeout(() => {
+          (navigation as any).navigate('ProductDetail', { product: response.data?.product });
+          setIsProcessing(false);
+          setScanFeedback('');
+          setManualBarcode('');
+        }, 500);
+      } else {
+        setScanFeedback('Product not found');
+        
+        // Decrement scan count for free users even if product not found
+        if (!isPro) {
+          const scansRemaining = await ScanLimiterService.decrementScans();
+          
+          if (scansRemaining <= 3 && scansRemaining > 0) {
+            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
+          }
+        }
+        
+        setTimeout(() => {
+          (navigation as any).navigate('AddProduct', { barcode: manualBarcode.trim() });
+          setIsProcessing(false);
+          setScanFeedback('');
+          setManualBarcode('');
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error looking up barcode:', error);
+      Alert.alert('Error', 'Failed to look up barcode. Please try again.');
+      setIsProcessing(false);
+      setScanFeedback('');
+    }
+  };
+
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr', 'ean-13', 'ean-8', 'code-128', 'code-39', 'upc-a', 'upc-e', 'code-93', 'codabar'],
+    onCodeScanned: handleBarcodeScanned,
+  });
+
+  const handleManualScan = async () => {
+    // Check if user can scan (for free users)
+    if (!isPro) {
+      const canScan = await ScanLimiterService.canScan(isPro);
+      
+      if (!canScan) {
+        // User has reached their scan limit
+        setShowSubscriptionModal(true);
+        return;
+      }
+    }
+    
+    // Demo scan with a known product barcode
+    const mockBarcode = '058449880011'; // Nature's Path Oats
+    
+    setIsProcessing(true);
+    setScanFeedback('Demo scanning...');
+    
+    try {
+      const response = await apiClient.scanProduct(mockBarcode);
+      
+      if (response.success && response.data) {
+        setScanFeedback('Product found!');
+        
+        // Decrement scan count for free users after successful scan
+        if (!isPro) {
+          const scansRemaining = await ScanLimiterService.decrementScans();
+          
+          // Show warning toast if 3 or fewer scans remaining
+          if (scansRemaining <= 3 && scansRemaining > 0) {
+            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
+          }
+        }
+        
+        setTimeout(() => {
+          (navigation as any).navigate('ProductDetail', { barcode: mockBarcode });
+          setIsProcessing(false);
+          setScanFeedback('');
+        }, 500);
+      } else {
+        setScanFeedback('Product not found');
+        
+        // Decrement scan count for free users even if product not found
+        if (!isPro) {
+          const scansRemaining = await ScanLimiterService.decrementScans();
+          
+          // Show warning toast if 3 or fewer scans remaining
+          if (scansRemaining <= 3 && scansRemaining > 0) {
+            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
+          }
+        }
+        
+        setTimeout(() => {
+          (navigation as any).navigate('AddProduct', { barcode: mockBarcode });
+          setIsProcessing(false);
+          setScanFeedback('');
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error in demo scan:', error);
+      Alert.alert('Error', 'Demo scan failed. Please try again.');
+      setIsProcessing(false);
+      setScanFeedback('');
+    }
+  };
+
+  const handleOpenSettings = () => {
+    Alert.alert(
+      'Camera Permission Required',
+      'To scan product barcodes, please enable camera access in your device settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => Linking.openSettings() }
+      ]
+    );
+  };
+
+  if (hasPermission === null) {
+    // Still checking permissions
     return (
       <View className="flex-1 bg-black items-center justify-center">
-        <Ionicons name="camera-outline" size={64} color="white" className="mb-4" />
-        <Text className="text-white text-lg mb-4 text-center px-8">
-          Camera permission required to scan barcodes
+        <ActivityIndicator size="large" color="#FB923C" />
+        <Text className="text-white text-lg mt-4">Checking camera permissions...</Text>
+      </View>
+    );
+  }
+
+  if (!hasPermission) {
+    return (
+      <View className="flex-1 bg-black items-center justify-center px-8">
+        <Ionicons name="camera-outline" size={80} color="white" className="mb-6" />
+        <Text className="text-white text-2xl font-bold mb-4 text-center">
+          Camera Access Required
+        </Text>
+        <Text className="text-white/80 text-base mb-8 text-center">
+          To scan product barcodes and identify IBS-safe foods, we need access to your camera.
         </Text>
         <TouchableOpacity
-          className="bg-orange-400 px-6 py-3 rounded-lg"
-          onPress={checkCameraPermission}
+          className="bg-orange-400 px-8 py-4 rounded-full mb-4 w-full"
+          onPress={handleOpenSettings}
         >
-          <Text className="text-white font-semibold">Grant Permission</Text>
+          <Text className="text-white font-semibold text-center text-lg">
+            Open Settings
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="bg-white/20 px-8 py-4 rounded-full w-full"
+          onPress={() => navigation.goBack()}
+        >
+          <Text className="text-white font-medium text-center">
+            Go Back
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -85,14 +347,34 @@ export default function CameraScreen() {
 
   if (!device) {
     return (
-      <View className="flex-1 bg-black items-center justify-center">
-        <Ionicons name="camera-outline" size={64} color="white" className="mb-4" />
-        <Text className="text-white text-lg mb-4">No camera device found</Text>
+      <View className="flex-1 bg-black items-center justify-center px-8">
+        <Ionicons name="camera-outline" size={80} color="white" className="mb-6" />
+        <Text className="text-white text-2xl font-bold mb-4 text-center">
+          No Camera Found
+        </Text>
+        <Text className="text-white/80 text-base mb-8 text-center">
+          We couldn't detect a camera on your device. You can try a demo scan or add products manually.
+        </Text>
         <TouchableOpacity
-          className="bg-orange-400 px-6 py-3 rounded-lg"
+          className="bg-orange-400 px-8 py-4 rounded-full mb-4 w-full"
           onPress={handleManualScan}
+          disabled={isProcessing}
         >
-          <Text className="text-white font-semibold">Try Demo Scan</Text>
+          {isProcessing ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-semibold text-center text-lg">
+              Try Demo Scan
+            </Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="bg-white/20 px-8 py-4 rounded-full w-full"
+          onPress={() => navigation.goBack()}
+        >
+          <Text className="text-white font-medium text-center">
+            Go Back
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -140,47 +422,126 @@ export default function CameraScreen() {
             <View className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-orange-400 rounded-br-lg" />
             
             {/* Scanning line animation */}
-            {isScanning && (
+            {isScanning && !isProcessing && (
               <View className="absolute top-1/2 left-0 right-0 h-0.5 bg-orange-400 opacity-80" />
+            )}
+            
+            {/* Processing indicator */}
+            {isProcessing && (
+              <View className="absolute inset-0 items-center justify-center bg-black/30 rounded-lg">
+                <ActivityIndicator size="large" color="#FB923C" />
+              </View>
             )}
           </View>
           
-          <Text className="text-white text-center mt-6 px-8">
-            {isScanning 
-              ? "Position the barcode within the frame to scan" 
-              : "Scanning paused - tap play to resume"
-            }
-          </Text>
-          
-          <View className="flex-row items-center mt-4 bg-black/30 rounded-full px-4 py-2">
-            <Ionicons name="information-circle-outline" size={16} color="white" />
-            <Text className="text-white text-sm ml-2">
-              Supports UPC, EAN, QR codes
+          {/* Feedback text */}
+          {scanFeedback ? (
+            <View className="mt-6 bg-orange-400/90 rounded-full px-6 py-3">
+              <Text className="text-white font-semibold text-center">
+                {scanFeedback}
+              </Text>
+            </View>
+          ) : (
+            <Text className="text-white text-center mt-6 px-8">
+              {isScanning 
+                ? "Position the barcode within the frame to scan" 
+                : "Scanning paused - tap play to resume"
+              }
             </Text>
-          </View>
+          )}
         </View>
 
         {/* Bottom Controls */}
-        <View className="p-6">
-          <TouchableOpacity
+        <View className="p-6 pb-8">
+          {/* <TouchableOpacity
             className="bg-orange-400 py-4 rounded-full items-center mb-3"
             onPress={handleManualScan}
+            disabled={isProcessing}
           >
-            <Text className="text-white font-semibold text-lg">
-              Try Demo Scan
+            {isProcessing ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-semibold text-lg">
+                Try Demo Scan
+              </Text>
+            )}
+          </TouchableOpacity> */}
+          
+          <TouchableOpacity
+            className="bg-white/20 py-3 rounded-full items-center mb-3"
+            onPress={() => setShowManualEntry(true)}
+            disabled={isProcessing}
+          >
+            <Text className="text-white font-medium">
+              Enter Barcode Manually
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity
-            className="bg-white/20 py-3 rounded-full items-center"
+            className="bg-white/10 py-3 rounded-full items-center"
             onPress={() => (navigation as any).navigate('AddProduct', { barcode: 'manual-entry' })}
+            disabled={isProcessing}
           >
             <Text className="text-white font-medium">
-              Add Product Manually
+              Add Product Without Barcode
             </Text>
           </TouchableOpacity>
         </View>
       </View>
+      
+      {/* Manual Barcode Entry Modal */}
+      <Modal
+        visible={showManualEntry}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowManualEntry(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-3xl p-6 pb-8">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-xl font-bold text-gray-900">Enter Barcode</Text>
+              <TouchableOpacity onPress={() => setShowManualEntry(false)}>
+                <Ionicons name="close" size={24} color="#374151" />
+              </TouchableOpacity>
+            </View>
+            
+            <Text className="text-gray-600 mb-4">
+              Enter the barcode number found on the product packaging
+            </Text>
+            
+            <TextInput
+              className="bg-gray-100 rounded-xl px-4 py-3 text-lg text-gray-900 mb-4 border-2 border-gray-300"
+              placeholder="e.g., 058449880011"
+              placeholderTextColor="#9CA3AF"
+              value={manualBarcode}
+              onChangeText={setManualBarcode}
+              keyboardType="number-pad"
+              autoFocus
+            />
+            
+            <TouchableOpacity
+              className="bg-orange-400 py-4 rounded-full items-center"
+              onPress={handleManualBarcodeSubmit}
+              disabled={!manualBarcode.trim()}
+              style={{ opacity: manualBarcode.trim() ? 1 : 0.5 }}
+            >
+              <Text className="text-white font-semibold text-lg">
+                Look Up Product
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        onClose={() => {
+          setShowSubscriptionModal(false);
+          setIsScanning(true);
+        }}
+        trigger="scan_limit"
+      />
     </View>
   );
 }

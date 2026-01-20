@@ -1,285 +1,145 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSubscription } from '../context/SubscriptionContext';
+import { apiClient } from '../services/api';
+import SubscriptionModal from '../components/SubscriptionModal';
+
+interface SubmitProductResponse {
+  success: boolean;
+  message: string;
+  estimatedTime?: string;
+}
 
 export default function AddProductScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { barcode } = (route.params as { barcode?: string }) || { barcode: 'Unknown' };
+  const { isPro } = useSubscription();
   
-  const [productData, setProductData] = useState({
-    name: '',
-    brand: '',
-    servingSize: '',
-    calories: '',
-    protein: '',
-    carbs: '',
-    fat: '',
-    fiber: '',
-    sugar: '',
-    sodium: '',
-    ingredients: '',
-  });
-  
-  const [productImage, setProductImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  const handleTakePhoto = () => {
-    Alert.alert(
-      'Add Product Photo',
-      'Choose how to add a photo of the product',
-      [
-        { text: 'Take Photo', onPress: () => openCamera() },
-        { text: 'Choose from Gallery', onPress: () => openGallery() },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
-  };
-
-  const openCamera = () => {
-    // In real app, would open camera to take photo
-    setProductImage('https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=400&fit=crop');
-    Alert.alert('Photo Captured', 'Product photo has been added');
-  };
-
-  const openGallery = () => {
-    // In real app, would open photo gallery
-    setProductImage('https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=400&fit=crop');
-    Alert.alert('Photo Selected', 'Product photo has been added from gallery');
-  };
-
-  const handleSaveProduct = () => {
-    if (!productData.name || !productData.brand) {
-      Alert.alert('Error', 'Please fill in at least the product name and brand');
+  const handleSubmitForAnalysis = async () => {
+    // Check subscription status before allowing submission
+    if (!isPro) {
+      // Show subscription modal for free users
+      setShowSubscriptionModal(true);
       return;
     }
 
-    Alert.alert(
-      'Product Saved!',
-      'Thank you for contributing to our database. Your product will be reviewed and added.',
-      [
-        { text: 'Add Another', onPress: () => navigation.goBack() },
-        { text: 'Done', onPress: () => (navigation as any).navigate('Overview') }
-      ]
-    );
+    // Pro users can submit for analysis
+    setIsSubmitting(true);
+    
+    try {
+      const response = await apiClient.post<SubmitProductResponse>(
+        '/products/submit-for-analysis',
+        { barcode }
+      );
+
+      if (response.success && response.data) {
+        Alert.alert(
+          'Submitted Successfully',
+          response.data.message || 'Your product has been submitted for analysis. We\'ll notify you when it\'s ready.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Submission Failed',
+          response.error?.message || 'Unable to submit product for analysis. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const updateField = (field: string, value: string) => {
-    setProductData(prev => ({ ...prev, [field]: value }));
+  const handleTryAnotherScan = () => {
+    navigation.goBack();
   };
 
   return (
-    <View className="flex-1 bg-gray-100">
-      <ScrollView className="flex-1">
-        {/* Header */}
-        <View className="bg-white">
-          <View className="flex-row items-center justify-between p-4 pt-12">
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
-            >
-              <Ionicons name="arrow-back" size={24} color="#374151" />
-            </TouchableOpacity>
-            <Text className="text-lg font-semibold text-gray-900">Add New Product</Text>
-            <View className="w-10" />
+    <View className="flex-1 bg-[#f3eee5]">
+      {/* Header */}
+      <View className="bg-white">
+        <View className="flex-row items-center justify-between p-4 pt-12">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+          >
+            <Ionicons name="arrow-back" size={24} color="#374151" />
+          </TouchableOpacity>
+          <Text className="text-lg font-semibold text-gray-900">Product Not Found</Text>
+          <View className="w-10" />
+        </View>
+      </View>
+
+      {/* Empty State */}
+      <View className="flex-1 items-center justify-center px-6">
+        {/* Icon Container */}
+        <View className="items-center mb-8">
+          <View className="w-32 h-32 bg-gray-100 rounded-full items-center justify-center mb-4">
+            <Ionicons name="search" size={48} color="#9CA3AF" />
+            <View className="absolute bottom-6 right-6 w-12 h-12 bg-orange-100 rounded-full items-center justify-center">
+              <Ionicons name="help" size={24} color="#F59E0B" />
+            </View>
           </View>
         </View>
 
-        {/* Product Not Found Message */}
-        <View className="bg-orange-50 mx-4 mt-4 rounded-2xl p-6 mb-4">
-          <View className="flex-row items-center mb-3">
-            <Ionicons name="search" size={24} color="#f59e0b" />
-            <Text className="text-orange-600 font-semibold ml-2">Product Not Found</Text>
-          </View>
-          <Text className="text-gray-700 mb-2">
-            We couldn't find this product in our database.
-          </Text>
-          <Text className="text-sm text-gray-600">
-            Barcode: <Text className="font-mono">{barcode}</Text>
-          </Text>
-          <Text className="text-sm text-gray-600 mt-2">
-            Help us by adding the product information below!
-          </Text>
-        </View>
-
-        {/* Product Photo */}
-        <View className="bg-white mx-4 rounded-2xl p-6 mb-4">
-          <Text className="text-lg font-bold text-gray-900 mb-4">Product Photo</Text>
-          
-          {productImage ? (
-            <View className="items-center">
-              <Image 
-                source={{ uri: productImage }}
-                className="w-48 h-48 rounded-2xl mb-4"
-              />
-              <TouchableOpacity 
-                className="bg-gray-100 rounded-xl px-4 py-2"
-                onPress={handleTakePhoto}
-              >
-                <Text className="text-gray-700 font-medium">Change Photo</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity 
-              className="border-2 border-dashed border-gray-300 rounded-2xl p-8 items-center"
-              onPress={handleTakePhoto}
-            >
-              <Ionicons name="camera" size={48} color="#9CA3AF" />
-              <Text className="text-gray-500 font-medium mt-2">Add Product Photo</Text>
-              <Text className="text-gray-400 text-sm mt-1">Tap to take a photo or choose from gallery</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Basic Information */}
-        <View className="bg-white mx-4 rounded-2xl p-6 mb-4">
-          <Text className="text-lg font-bold text-gray-900 mb-4">Basic Information</Text>
-          
-          <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Product Name *</Text>
-            <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-              placeholder="Enter product name"
-              value={productData.name}
-              onChangeText={(value) => updateField('name', value)}
-            />
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Brand *</Text>
-            <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-              placeholder="Enter brand name"
-              value={productData.brand}
-              onChangeText={(value) => updateField('brand', value)}
-            />
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Serving Size</Text>
-            <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-              placeholder="e.g., 1 cup (240ml)"
-              value={productData.servingSize}
-              onChangeText={(value) => updateField('servingSize', value)}
-            />
-          </View>
-        </View>
-
-        {/* Nutrition Information */}
-        <View className="bg-white mx-4 rounded-2xl p-6 mb-4">
-          <Text className="text-lg font-bold text-gray-900 mb-4">Nutrition Facts (per serving)</Text>
-          
-          <View className="flex-row space-x-4 mb-4">
-            <View className="flex-1">
-              <Text className="text-gray-700 font-medium mb-2">Calories</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-                placeholder="0"
-                keyboardType="numeric"
-                value={productData.calories}
-                onChangeText={(value) => updateField('calories', value)}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-gray-700 font-medium mb-2">Protein (g)</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-                placeholder="0"
-                keyboardType="numeric"
-                value={productData.protein}
-                onChangeText={(value) => updateField('protein', value)}
-              />
-            </View>
-          </View>
-
-          <View className="flex-row space-x-4 mb-4">
-            <View className="flex-1">
-              <Text className="text-gray-700 font-medium mb-2">Carbs (g)</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-                placeholder="0"
-                keyboardType="numeric"
-                value={productData.carbs}
-                onChangeText={(value) => updateField('carbs', value)}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-gray-700 font-medium mb-2">Fat (g)</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-                placeholder="0"
-                keyboardType="numeric"
-                value={productData.fat}
-                onChangeText={(value) => updateField('fat', value)}
-              />
-            </View>
-          </View>
-
-          <View className="flex-row space-x-4 mb-4">
-            <View className="flex-1">
-              <Text className="text-gray-700 font-medium mb-2">Fiber (g)</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-                placeholder="0"
-                keyboardType="numeric"
-                value={productData.fiber}
-                onChangeText={(value) => updateField('fiber', value)}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-gray-700 font-medium mb-2">Sugar (g)</Text>
-              <TextInput
-                className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-                placeholder="0"
-                keyboardType="numeric"
-                value={productData.sugar}
-                onChangeText={(value) => updateField('sugar', value)}
-              />
-            </View>
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-gray-700 font-medium mb-2">Sodium (mg)</Text>
-            <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900"
-              placeholder="0"
-              keyboardType="numeric"
-              value={productData.sodium}
-              onChangeText={(value) => updateField('sodium', value)}
-            />
-          </View>
-        </View>
-
-        {/* Ingredients */}
-        <View className="bg-white mx-4 rounded-2xl p-6 mb-6">
-          <Text className="text-lg font-bold text-gray-900 mb-4">Ingredients</Text>
-          <TextInput
-            className="bg-gray-50 rounded-xl px-4 py-3 text-gray-900 min-h-24"
-            placeholder="List all ingredients separated by commas"
-            multiline
-            textAlignVertical="top"
-            value={productData.ingredients}
-            onChangeText={(value) => updateField('ingredients', value)}
-          />
-        </View>
+        {/* Message */}
+        <Text className="text-2xl font-bold text-gray-900 text-center mb-3">
+          Product Not Found
+        </Text>
+        <Text className="text-base text-gray-600 text-center mb-2 px-4">
+          We couldn't find this item in our database, but we can analyze it for you
+        </Text>
+        <Text className="text-sm text-gray-500 text-center mb-8">
+          Barcode: <Text className="font-mono font-semibold">{barcode}</Text>
+        </Text>
 
         {/* Action Buttons */}
-        <View className="px-4 pb-8">
+        <View className="w-full px-4">
           <TouchableOpacity 
-            className="bg-green-700 rounded-2xl py-4 items-center mb-3"
-            onPress={handleSaveProduct}
+            className="bg-[#2D5F4F] rounded-2xl py-4 items-center mb-3 shadow-sm"
+            onPress={handleSubmitForAnalysis}
+            disabled={isSubmitting}
           >
-            <Text className="text-white font-semibold text-lg">Save Product</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-semibold text-lg">Submit for Analysis</Text>
+            )}
           </TouchableOpacity>
+          
           <TouchableOpacity 
-            className="bg-gray-200 rounded-2xl py-4 items-center"
-            onPress={() => navigation.goBack()}
+            className="bg-white border-2 border-gray-200 rounded-2xl py-4 items-center"
+            onPress={handleTryAnotherScan}
+            disabled={isSubmitting}
           >
-            <Text className="text-gray-700 font-semibold text-lg">Cancel</Text>
+            <Text className="text-gray-700 font-semibold text-lg">Try Another Scan</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        visible={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        trigger="feature_access"
+      />
     </View>
   );
 }

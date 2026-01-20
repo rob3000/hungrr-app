@@ -1,15 +1,14 @@
 import './global.css';
 
 import { DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { useColorScheme } from 'react-native';
 import { useMemo } from 'react';
 
 import 'react-native-gesture-handler';
 
 import Navigation from './navigation';
-import { AuthProvider } from './context/AuthContext';
-
-import { vars } from 'nativewind'
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
+import { SavedItemsProvider } from './context/SavedItemsContext';
 
 const MyTheme = {
   ...DefaultTheme,
@@ -27,24 +26,31 @@ const MyTheme = {
 const MyDarkTheme = {
   ...DarkTheme,
   colors: {
-    ...DefaultTheme.colors,
-    primary: 'rgb(0, 122, 255)',
-    background: 'rgb(243, 238, 229)',
-    card: 'rgb(255, 255, 255)',
-    text: 'rgb(28, 28, 30)',
-    border: 'rgb(216, 216, 216)',
-    notification: 'rgb(255, 59, 48)',
+    ...DarkTheme.colors,
+    primary: 'rgb(45, 74, 62)',
+    background: 'rgb(18, 18, 18)',
+    card: 'rgb(28, 28, 28)',
+    text: 'rgb(229, 229, 231)',
+    border: 'rgb(39, 39, 41)',
+    notification: 'rgb(255, 69, 58)',
   },
 };
 
+function AppContent() {
+  const { darkMode } = useAuth();
+  const theme = useMemo(() => (darkMode ? MyDarkTheme : MyTheme), [darkMode]);
+
+  return <Navigation theme={theme} />;
+}
 
 export default function App() {
-  const colorScheme = useColorScheme();
-  const theme = useMemo(() => (colorScheme === 'dark' ? MyDarkTheme : MyTheme), [colorScheme]);
-
   return (
     <AuthProvider>
-      <Navigation theme={theme} />
+      <SubscriptionProvider>
+        <SavedItemsProvider>
+          <AppContent />
+        </SavedItemsProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }
