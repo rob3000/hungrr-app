@@ -8,9 +8,15 @@
       "android": {
         "buildType": "apk"
       },
-      "environment": "development"
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://hungrr-backend.btwecx9h8bg2t.ap-southeast-2.cs.amazonlightsail.com/v1"
+      }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://hungrr-backend.btwecx9h8bg2t.ap-southeast-2.cs.amazonlightsail.com/v1"
+      }
+    }
   },
   "submit": {
     "production": {}

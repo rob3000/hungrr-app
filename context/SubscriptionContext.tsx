@@ -39,6 +39,7 @@ interface SubscriptionContextType {
   availablePlans: SubscriptionPlan[];
   plansLoading: boolean;
   plansError: string | null;
+  isLoading: boolean;
   loadSubscription: () => Promise<void>;
   updateSubscription: (plan: SubscriptionPlan) => Promise<void>;
   decrementScans: () => void;
@@ -117,7 +118,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   const syncSubscriptionWithAPI = async () => {
     try {
       // Call API endpoint to get user subscription status
-      const response = await apiClient.get<UserSubscriptionResponse>('/subscriptions/status');
+      const response = await apiClient.getSubscriptionStatus();
 
       if (response.success && response.data) {
         const apiData = response.data;
@@ -276,10 +277,6 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   const savedItemsLimit = isPro ? Infinity : FREE_USER_SAVED_ITEMS_LIMIT;
 
-  if (isLoading) {
-    return null; // Or a loading screen
-  }
-
   return (
     <SubscriptionContext.Provider
       value={{
@@ -292,6 +289,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         availablePlans,
         plansLoading,
         plansError,
+        isLoading,
         loadSubscription,
         updateSubscription,
         decrementScans,

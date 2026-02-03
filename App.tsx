@@ -1,9 +1,11 @@
 import './global.css';
 
 import { DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 
 import 'react-native-gesture-handler';
+import RNBootSplash from 'react-native-bootsplash';
 
 import Navigation from './navigation';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -37,8 +39,23 @@ const MyDarkTheme = {
 };
 
 function AppContent() {
-  const { darkMode } = useAuth();
+  const { darkMode, isLoading: authLoading } = useAuth();
   const theme = useMemo(() => (darkMode ? MyDarkTheme : MyTheme), [darkMode]);
+
+  useEffect(() => {
+    // Hide splash screen once app is ready
+    if (!authLoading) {
+      RNBootSplash.hide({ fade: true });
+    }
+  }, [authLoading]);
+
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3eee5' }}>
+        <ActivityIndicator size="large" color="#2d5f4f" />
+      </View>
+    );
+  }
 
   return <Navigation theme={theme} />;
 }

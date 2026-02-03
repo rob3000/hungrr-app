@@ -16,6 +16,7 @@ interface AuthContextType {
   user: UserProfile | null;
   token: string | null;
   darkMode: boolean;
+  isLoading: boolean;
   login: (token: string, user: UserProfile) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<UserProfile>) => Promise<void>;
@@ -151,14 +152,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Don't render children until session is loaded
-  if (isLoading) {
-    return null; // Or a loading screen
-  }
-
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, user, token, darkMode, login, logout, updateUser, toggleDarkMode }}
+      value={{ isLoggedIn, user, token, darkMode, isLoading, login, logout, updateUser, toggleDarkMode }}
     >
       {children}
     </AuthContext.Provider>
