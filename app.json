@@ -44,13 +44,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/splash.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#f3eee5"
       },
       "permissions": [
         "android.permission.CAMERA"
       ],
       "package": "com.anonymous.hungrr"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8b0df8a4-a095-4219-bf4a-9491e5d93f16"
+      }
     }
   }
 }

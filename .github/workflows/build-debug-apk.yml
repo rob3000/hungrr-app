@@ -12,7 +12,8 @@ jobs:
   build:
     name: Build Debug APK
     runs-on: ubuntu-latest
-    
+    environment: dev
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,9 +49,12 @@ jobs:
       - name: Generate Expo prebuild
         run: npx expo prebuild --platform android --clean
 
-      - name: Build Android Debug APK
-        working-directory: ./android
-        run: ./gradlew assembleDebug --no-daemon
+      - name: EAS BUILD
+        run: eas build --profile preview --platform android --non-interactive --local --output=./app-release.apk
+
+      # - name: Build Android Debug APK
+      #   working-directory: ./android
+      #   run: ./gradlew assembleDebug --no-daemon
 
       - name: Rename APK
         run: |
