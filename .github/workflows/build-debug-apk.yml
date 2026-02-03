@@ -41,6 +41,10 @@ jobs:
           echo "EXPO_PUBLIC_API_BASE_URL=${API_URL}/v1" > .env
           echo "Building with API URL: ${API_URL}/v1"
 
+      - name: Generate bootsplash
+        run: |
+          npx react-native generate-bootsplash ./assets/logo.png --background=#f3eee5
+
       - name: Generate Expo prebuild
         run: npx expo prebuild --platform android --clean
 
