@@ -12,8 +12,7 @@ jobs:
   build:
     name: Build Debug APK
     runs-on: ubuntu-latest
-    environment: dev
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,24 +41,18 @@ jobs:
           echo "EXPO_PUBLIC_API_BASE_URL=${API_URL}/v1" > .env
           echo "Building with API URL: ${API_URL}/v1"
 
-      - name: Generate bootsplash
-        run: |
-          npx react-native generate-bootsplash ./assets/logo.png --background=#f3eee5
-
-      - name: Generate Expo prebuild
-        run: npx expo prebuild --platform android --clean
+      - name: Install eas
+        run: npm install -g eas-cli
 
       - name: EAS BUILD
-        run: eas build --profile preview --platform android --non-interactive --local --output=./app-release.apk
-
-      # - name: Build Android Debug APK
-      #   working-directory: ./android
-      #   run: ./gradlew assembleDebug --no-daemon
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --profile preview --platform android --clear-cache --non-interactive --local --output=./app-release.apk
 
       - name: Rename APK
         run: |
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          cp android/app/build/outputs/apk/debug/app-debug.apk hungrr-debug-${TIMESTAMP}.apk
+          mv app-release.apk hungrr-debug-${TIMESTAMP}.apk
           echo "APK_NAME=hungrr-debug-${TIMESTAMP}.apk" >> $GITHUB_ENV
 
       - name: Upload APK as Artifact
