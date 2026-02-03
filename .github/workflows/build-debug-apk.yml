@@ -12,6 +12,7 @@ jobs:
   build:
     name: Build Debug APK
     runs-on: ubuntu-latest
+    environment: dev
     
     steps:
       - name: Checkout repository
@@ -76,4 +77,5 @@ jobs:
             core.notice(`✅ Debug APK built successfully!`);
             core.notice(`📦 Download from: https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`);
             core.notice(`📱 Install on your device and test!`);
+
 
