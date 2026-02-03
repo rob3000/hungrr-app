@@ -19,8 +19,8 @@ web-build/
 *.keystore
 keystore-base64.txt
 
-ios
-android
+/ios
+/android
 
 # macOS
 .DS_Store
