@@ -337,6 +337,22 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-row items-center justify-between p-4"
+              onPress={() => navigation.navigate('DietaryProfile')}
+            >
+              <View className="flex-row items-center flex-1">
+                <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="calendar-outline" size={20} color="#374151" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-gray-600 text-sm">Dietary Profile</Text>
+                  <Text className="text-gray-900 font-medium">// TODO LIST PROFILE //</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
           </View>
         </View>
 

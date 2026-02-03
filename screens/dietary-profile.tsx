@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import { apiClient } from '../services/api';
 
 interface DietaryRestriction {
@@ -10,6 +11,24 @@ interface DietaryRestriction {
   emoji: string;
   category: 'allergy' | 'diet' | 'medical';
 }
+
+interface FODMAPLevels {
+  fructose: number;
+  lactose: number;
+  fructans: number;
+  gos: number;
+  sorbitol: number;
+  mannitol: number;
+}
+
+const FODMAP_TYPES = [
+  { id: 'fructose', label: 'Fructose' },
+  { id: 'lactose', label: 'Lactose' },
+  { id: 'fructans', label: 'Fructans' },
+  { id: 'gos', label: 'GOS' },
+  { id: 'sorbitol', label: 'Sorbitol' },
+  { id: 'mannitol', label: 'Mannitol' },
+];
 
 const DIETARY_OPTIONS: DietaryRestriction[] = [
   // Common Allergies
@@ -40,6 +59,14 @@ export default function DietaryProfileScreen() {
   const [selectedRestrictions, setSelectedRestrictions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [fodmapLevels, setFodmapLevels] = useState<FODMAPLevels>({
+    fructose: 0.5,
+    lactose: 0.5,
+    fructans: 0.5,
+    gos: 0.5,
+    sorbitol: 0.5,
+    mannitol: 0.5,
+  });
 
   const toggleRestriction = (id: string) => {
     setSelectedRestrictions(prev =>
@@ -53,6 +80,7 @@ export default function DietaryProfileScreen() {
       // Save dietary profile to backend
       await apiClient.saveDietaryProfile({
         restrictions: selectedRestrictions,
+        fodmapLevels: selectedRestrictions.includes('low_fodmap') ? fodmapLevels : undefined,
       });
 
       // Navigate to overview
@@ -70,6 +98,20 @@ export default function DietaryProfileScreen() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const getSensitivityLabel = (value: number): string => {
+    if (value < 0.25) return 'INACTIVE';
+    if (value < 0.5) return 'LOW';
+    if (value < 0.75) return 'MODERATE';
+    return 'HIGH SENSITIVITY';
+  };
+
+  const getSensitivityColor = (value: number): string => {
+    if (value < 0.25) return '#9CA3AF';
+    if (value < 0.5) return '#10B981';
+    if (value < 0.75) return '#F59E0B';
+    return '#EF4444';
   };
 
   const handleSkip = () => {
@@ -238,6 +280,54 @@ export default function DietaryProfileScreen() {
                 );
               })}
             </View>
+          </View>
+        )}
+
+        {/* FODMAP Sensitivity Levels */}
+        {selectedRestrictions.includes('low_fodmap') && (
+          <View className="mb-6">
+            <View className="flex-row items-center mb-2">
+              <Text className="text-sm font-medium text-gray-500">● FODMAP Sensitivity Levels</Text>
+            </View>
+            <Text className="text-xs text-gray-500 mb-4">
+              Indicate how sensitive you are to common FODMAP ingredients for each category
+            </Text>
+
+            {FODMAP_TYPES.map((fodmap) => {
+              const value = fodmapLevels[fodmap.id as keyof FODMAPLevels];
+              const label = getSensitivityLabel(value);
+              const color = getSensitivityColor(value);
+
+              return (
+                <View key={fodmap.id} className="mb-4">
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-base font-medium text-gray-900">{fodmap.label}</Text>
+                    <Text className="text-xs font-bold" style={{ color }}>
+                      {label}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center">
+                    <Text className="text-xs text-gray-400 mr-2">Low</Text>
+                    <Slider
+                      style={{ flex: 1, height: 40 }}
+                      minimumValue={0}
+                      maximumValue={1}
+                      value={value}
+                      onValueChange={(val: number) =>
+                        setFodmapLevels((prev) => ({
+                          ...prev,
+                          [fodmap.id]: val,
+                        }))
+                      }
+                      minimumTrackTintColor="#2d5f4f"
+                      maximumTrackTintColor="#E5E7EB"
+                      thumbTintColor="#2d5f4f"
+                    />
+                    <Text className="text-xs text-gray-400 ml-2">High</Text>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
 

@@ -21,7 +21,6 @@ type OTPVerificationRouteProp = RouteProp<
     OTPVerification: {
       email: string;
       sessionToken: string;
-      name?: string;
       isSignup?: boolean;
     };
   },
@@ -31,7 +30,7 @@ type OTPVerificationRouteProp = RouteProp<
 export default function OTPVerificationScreen() {
   const navigation = useNavigation();
   const route = useRoute<OTPVerificationRouteProp>();
-  const { email, sessionToken } = route.params;
+  const { email, sessionToken, isSignup } = route.params;
   const { login } = useAuth();
 
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
@@ -138,11 +137,17 @@ export default function OTPVerificationScreen() {
           // Store auth token and user profile in AuthContext
           await login(token, userProfile);
 
-          // Navigate to dashboard
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Overview' }],
-          });
+          if (isSignup) {
+            (navigation as any).navigate('DietaryProfile');
+          } else {
+            // Navigate to dashboard
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Overview' }],
+            });
+          }
+
+         
         } else {
           // Failed to fetch user data
           setError(userResponse.error?.message || 'Failed to fetch user data. Please try again.');

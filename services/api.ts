@@ -53,12 +53,7 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
   success: boolean;
-  token: string;
-  user: {
-    email: string;
-    first_name: string;
-    last_name: string;
-  };
+  session_token: string;
 }
 
 // User Types
@@ -76,8 +71,18 @@ export interface DashboardDataResponse {
   isPro: boolean;
 }
 
+export interface FODMAPLevels {
+  fructose: number;
+  lactose: number;
+  fructans: number;
+  gos: number;
+  sorbitol: number;
+  mannitol: number;
+}
+
 export interface DietaryProfileRequest {
   restrictions: string[];
+  fodmapLevels?: FODMAPLevels;
 }
 
 // Product Types

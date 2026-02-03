@@ -6,7 +6,8 @@ import { apiClient } from '../services/api';
 
 export default function SignupScreen() {
   const navigation = useNavigation();
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,13 +23,23 @@ export default function SignupScreen() {
     setError(null);
 
     // Validate name
-    if (!name.trim()) {
-      setError('Please enter your name');
+    if (!firstName.trim()) {
+      setError('Please enter your firstname');
       return;
     }
 
-    if (name.trim().length < 2) {
-      setError('Name must be at least 2 characters');
+    if (!lastName.trim()) {
+      setError('Please enter your lastname');
+      return;
+    }
+
+    if (firstName.trim().length < 2) {
+      setError('firstname must be at least 2 characters');
+      return;
+    }
+
+    if (lastName.trim().length < 2) {
+      setError('lastname must be at least 1 characters');
       return;
     }
 
@@ -47,18 +58,17 @@ export default function SignupScreen() {
 
     try {
       // Call API to send OTP for signup
-      const response = await apiClient.sendOTP({
+      const response = await apiClient.register({
         email: email.trim(),
-        name: name.trim(),
-        isSignup: true,
-      });
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+      })
 
       if (response.success && response.data) {
         // Navigate to OTP verification screen with signup flag
         (navigation as any).navigate('OTPVerification', {
           email: email.trim(),
           sessionToken: response.data.session_token,
-          name: name.trim(),
           isSignup: true,
         });
       } else {
@@ -109,15 +119,30 @@ export default function SignupScreen() {
         <View className="px-6">
           {/* Name Input */}
           <View className="mb-4">
-            <Text className="text-gray-700 text-sm font-medium mb-2">Full Name</Text>
+            <Text className="text-gray-700 text-sm font-medium mb-2">First Name</Text>
             <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
               <Ionicons name="person-outline" size={20} color="#9CA3AF" />
               <TextInput
                 className="flex-1 ml-3 text-gray-900"
                 placeholder="Enter your full name"
                 placeholderTextColor="#9CA3AF"
-                value={name}
-                onChangeText={setName}
+                value={firstName}
+                onChangeText={setFirstName}
+                editable={!isLoading}
+              />
+            </View>
+          </View>
+
+          <View className="mb-4">
+            <Text className="text-gray-700 text-sm font-medium mb-2">Surname</Text>
+            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
+              <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+              <TextInput
+                className="flex-1 ml-3 text-gray-900"
+                placeholder="Enter your full name"
+                placeholderTextColor="#9CA3AF"
+                value={lastName}
+                onChangeText={setLastName}
                 editable={!isLoading}
               />
             </View>
