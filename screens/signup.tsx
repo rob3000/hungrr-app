@@ -73,6 +73,12 @@ export default function SignupScreen() {
         });
       } else {
         // Show error message
+        if (response.error?.code === "HTTP_409") {
+          setError('User already exists')
+          return
+        }
+
+        console.info(response)
         setError(response.error?.message || 'Failed to send verification code. Please try again.');
       }
     } catch (err) {

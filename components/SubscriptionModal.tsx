@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useSubscription, SubscriptionPlan } from '../context/SubscriptionContext';
+import { useSubscription } from '../context/SubscriptionContext';
+import { SubscriptionPlan } from '../services/api';
 
 interface SubscriptionModalProps {
   visible: boolean;
@@ -18,7 +19,7 @@ export default function SubscriptionModal({ visible, onClose, trigger = 'feature
   // Auto-select the best value plan when plans load
   React.useEffect(() => {
     if (availablePlans.length > 0 && !selectedPlan) {
-      const bestValuePlan = availablePlans.find(plan => plan.isBestValue) || availablePlans[0];
+      const bestValuePlan = availablePlans[1]; // @todo = update
       setSelectedPlan(bestValuePlan);
     }
   }, [availablePlans, selectedPlan]);
@@ -142,10 +143,10 @@ export default function SubscriptionModal({ visible, onClose, trigger = 'feature
               <View className="mb-6">
                 {availablePlans.map((plan) => (
                   <TouchableOpacity
-                    key={plan.id}
+                    key={plan.name}
                     onPress={() => setSelectedPlan(plan)}
                     className={`rounded-2xl p-4 mb-3 border-2 ${
-                      selectedPlan?.id === plan.id
+                      selectedPlan?.name === plan.name
                         ? 'bg-green-50 border-green-500'
                         : 'bg-gray-50 border-gray-200'
                     }`}
@@ -156,24 +157,24 @@ export default function SubscriptionModal({ visible, onClose, trigger = 'feature
                           <Text className="text-lg font-bold text-gray-900 mr-2">
                             {plan.name}
                           </Text>
-                          {plan.isBestValue && (
+                          {plan.name !== "free" && (
                             <View className="bg-[#D4AF37] rounded-full px-3 py-1">
                               <Text className="text-white text-xs font-bold">BEST VALUE</Text>
                             </View>
                           )}
                         </View>
                         <Text className="text-2xl font-bold text-[#2D5F4F]">
-                          {formatPrice(plan.price, plan.currency, plan.interval)}
+                          {formatPrice(plan.price_cents, plan.currency, plan.interval)}
                         </Text>
                       </View>
                       <View
                         className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
-                          selectedPlan?.id === plan.id
+                          selectedPlan?.name === plan.name
                             ? 'bg-green-500 border-green-500'
                             : 'border-gray-300'
                         }`}
                       >
-                        {selectedPlan?.id === plan.id && (
+                        {selectedPlan?.name === plan.name && (
                           <Ionicons name="checkmark" size={16} color="white" />
                         )}
                       </View>

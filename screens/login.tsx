@@ -34,6 +34,9 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
+      // Reset the JWT
+      apiClient.setToken(null);
+
       // Call API to send OTP
       const response = await apiClient.sendOTP({
         email: email.trim(),
@@ -48,6 +51,12 @@ export default function LoginScreen() {
         });
       } else {
         // Show error message
+        
+        if (response.error?.code === "HTTP_404") {
+          setError("User not found")
+          return
+        }
+
         setError(response.error?.message || 'Failed to send OTP. Please try again.');
       }
     } catch (err) {

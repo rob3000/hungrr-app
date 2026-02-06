@@ -126,12 +126,10 @@ export interface ProductScanResponse {
 
 // Subscription Types
 export interface SubscriptionPlan {
-  id: string;
   name: string;
-  price: number;
-  interval: 'monthly' | 'yearly';
+  price_cents: number;
   currency: string;
-  isBestValue: boolean;
+  interval: string;
   features: string[];
 }
 
@@ -328,7 +326,7 @@ class APIClient {
    * Get dashboard data
    */
   async getDashboard(): Promise<APIResponse<DashboardDataResponse>> {
-    return this.get<DashboardDataResponse>('/users/dashboard');
+    return this.get<DashboardDataResponse>('/products/dashboard');
   }
 
   /**

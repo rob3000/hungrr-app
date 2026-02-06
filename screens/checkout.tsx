@@ -152,10 +152,7 @@ export default function CheckoutScreen() {
       };
 
       // Call API endpoint
-      const response = await apiClient.post<PurchaseSubscriptionResponse>(
-        '/subscriptions/purchase',
-        purchaseRequest
-      );
+      const response = await apiClient.purchaseSubscription(purchaseRequest);
 
       if (response.success && response.data) {
         // Update subscription context

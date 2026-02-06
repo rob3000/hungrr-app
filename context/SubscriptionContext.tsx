@@ -1,16 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { storage, STORAGE_KEYS } from '../services/storage';
-import { apiClient } from '../services/api';
+import { apiClient, SubscriptionPlan } from '../services/api';
 
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: number;
-  interval: 'monthly' | 'yearly';
-  currency: string;
-  isBestValue: boolean;
-  features: string[];
-}
 
 export interface SubscriptionStorage {
   isPro: boolean;
@@ -179,9 +170,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       setPlansLoading(true);
       setPlansError(null);
 
-      const response = await apiClient.get<{ plans: SubscriptionPlan[] }>(
-        '/subscriptions/plans'
-      );
+      const response = await apiClient.getSubscriptionPlans();
 
       if (response.success && response.data) {
         setAvailablePlans(response.data.plans);

@@ -37,8 +37,8 @@ export default function Overview() {
         const response = await apiClient.getDashboard();
 
         if (response.success && response.data) {
-          const { recentScans: apiRecentScans, scansToday, isPro: apiIsPro } = response.data;
-
+          const { recent_scans: apiRecentScans, scans_today: scansToday, is_pro: apiIsPro } = response.data;
+          console.log(response.data)
           // Update recent scans
           setRecentScans(apiRecentScans);
 
