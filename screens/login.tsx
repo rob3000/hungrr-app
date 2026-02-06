@@ -52,6 +52,7 @@ export default function LoginScreen() {
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
+      setError(JSON.stringify(err));
       console.error('Error sending OTP:', err);
     } finally {
       setIsLoading(false);

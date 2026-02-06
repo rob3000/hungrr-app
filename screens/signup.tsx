@@ -124,7 +124,7 @@ export default function SignupScreen() {
               <Ionicons name="person-outline" size={20} color="#9CA3AF" />
               <TextInput
                 className="flex-1 ml-3 text-gray-900"
-                placeholder="Enter your full name"
+                placeholder="Enter your firstname"
                 placeholderTextColor="#9CA3AF"
                 value={firstName}
                 onChangeText={setFirstName}
@@ -139,7 +139,7 @@ export default function SignupScreen() {
               <Ionicons name="person-outline" size={20} color="#9CA3AF" />
               <TextInput
                 className="flex-1 ml-3 text-gray-900"
-                placeholder="Enter your full name"
+                placeholder="Enter your surname"
                 placeholderTextColor="#9CA3AF"
                 value={lastName}
                 onChangeText={setLastName}

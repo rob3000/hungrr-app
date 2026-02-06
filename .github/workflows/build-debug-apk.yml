@@ -6,7 +6,7 @@ on:
       api_url:
         description: 'API Base URL (without /v1)'
         required: false
-        default: 'https://hungrr-backend.btwecx9h8bg2t.ap-southeast-2.cs.amazonlightsail.com'
+        default: 'https://api-dev.hungrr.io'
 
 jobs:
   build:

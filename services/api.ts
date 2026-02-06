@@ -65,10 +65,10 @@ export interface UserMeResponse {
 }
 
 export interface DashboardDataResponse {
-  recentScans: Product[];
-  scansToday: number;
-  savedItemsCount: number;
-  isPro: boolean;
+  recent_scans: Product[];
+  scans_today: number;
+  saved_items_Count: number;
+  is_pro: boolean;
 }
 
 export interface FODMAPLevels {
