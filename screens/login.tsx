@@ -12,6 +12,10 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [debugTapCount, setDebugTapCount] = useState(0);
+
+  // Enable debug panel in dev mode OR after 5 taps on logo
+  const isDebugEnabled = __DEV__ || debugTapCount >= 5;
 
   // Email validation function
   const isValidEmail = (email: string): boolean => {
@@ -103,8 +107,8 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-[#f3eee5]"
     >
-      {/* Debug Button - Only visible in development */}
-      {__DEV__ && (
+      {/* Debug Button - Visible in dev mode or after 5 taps on logo */}
+      {isDebugEnabled && (
         <TouchableOpacity
           onPress={() => setShowDebugPanel(true)}
           className="absolute top-12 right-4 z-50 bg-red-600 rounded-full p-3 shadow-lg"
@@ -121,13 +125,29 @@ export default function LoginScreen() {
       >
         {/* Header */}
         <View className="items-center pt-16 pb-8">
-          <Image 
-            source={require('../assets/logo.png')} 
-            height={8} 
-            width={8} 
-            resizeMode="contain" 
-            className='w-44'
-          />
+          <TouchableOpacity 
+            onPress={() => {
+              const newCount = debugTapCount + 1;
+              setDebugTapCount(newCount);
+              if (newCount === 5) {
+                logger.info('Debug mode enabled via logo taps');
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Image 
+              source={require('../assets/logo.png')} 
+              height={8} 
+              width={8} 
+              resizeMode="contain" 
+              className='w-44'
+            />
+          </TouchableOpacity>
+          {debugTapCount > 0 && debugTapCount < 5 && (
+            <Text className="text-xs text-gray-400 mt-2">
+              {5 - debugTapCount} more taps to enable debug mode
+            </Text>
+          )}
         </View>
 
         {/* Login Form */}

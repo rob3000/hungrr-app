@@ -1,4 +1,4 @@
-name: Build Debug APK (Quick Test)
+name: Build Debug APK with Debug Panel
 
 on:
   workflow_dispatch:
@@ -51,12 +51,12 @@ jobs:
       - name: EAS BUILD
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --profile preview --platform android --clear-cache --non-interactive --local --output=./app-release.apk
+        run: eas build --profile debug --platform android --clear-cache --non-interactive --local --output=./app-debug.apk
 
       - name: Rename APK
         run: |
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          mv app-release.apk hungrr-debug-${TIMESTAMP}.apk
+          mv app-debug.apk hungrr-debug-${TIMESTAMP}.apk
           echo "APK_NAME=hungrr-debug-${TIMESTAMP}.apk" >> $GITHUB_ENV
 
       - name: Upload APK as Artifact

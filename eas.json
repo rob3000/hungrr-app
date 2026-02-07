@@ -4,17 +4,27 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "debug": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "developmentClient": true,
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://api-dev.hungrr.io/v1"
+      }
+    },
     "preview": {
       "android": {
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://hungrr-backend.btwecx9h8bg2t.ap-southeast-2.cs.amazonlightsail.com/v1"
+        "EXPO_PUBLIC_API_BASE_URL": "https://api-dev.hungrr.io/v1"
       }
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://hungrr-backend.btwecx9h8bg2t.ap-southeast-2.cs.amazonlightsail.com/v1"
+        "EXPO_PUBLIC_API_BASE_URL": "https://api-dev.hungrr.io/v1"
       }
     }
   },
