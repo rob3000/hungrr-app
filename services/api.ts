@@ -3,8 +3,17 @@
  * Handles all HTTP requests to the backend API
  */
 
+import { logger } from './logger';
+
 // Use environment variable or fallback to localhost for development
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:4000/v1';
+
+// Log the API base URL on initialization
+logger.info('API Client initialized', { 
+  baseURL: API_BASE_URL,
+  envVar: process.env.EXPO_PUBLIC_API_BASE_URL,
+  isDefault: !process.env.EXPO_PUBLIC_API_BASE_URL 
+});
 
 export interface APIResponse<T> {
   success: boolean;
@@ -210,13 +219,26 @@ class APIClient {
 
   async get<T>(endpoint: string): Promise<APIResponse<T>> {
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const url = `${this.baseURL}${endpoint}`;
+      logger.debug(`GET ${url}`, { headers: this.getHeaders() });
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders(),
       });
 
+      logger.debug(`GET ${url} - Response`, { 
+        status: response.status, 
+        statusText: response.statusText 
+      });
+
       return this.handleResponse<T>(response);
     } catch (error) {
+      logger.error(`GET ${endpoint} - Network Error`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      
       return {
         success: false,
         error: {
@@ -229,14 +251,31 @@ class APIClient {
 
   async post<T>(endpoint: string, body?: any): Promise<APIResponse<T>> {
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const url = `${this.baseURL}${endpoint}`;
+      logger.debug(`POST ${url}`, { 
+        headers: this.getHeaders(),
+        body: body 
+      });
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: this.getHeaders(),
         body: body ? JSON.stringify(body) : undefined,
       });
 
+      logger.debug(`POST ${url} - Response`, { 
+        status: response.status, 
+        statusText: response.statusText 
+      });
+
       return this.handleResponse<T>(response);
     } catch (error) {
+      logger.error(`POST ${endpoint} - Network Error`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        body,
+      });
+      
       return {
         success: false,
         error: {

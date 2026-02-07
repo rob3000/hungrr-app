@@ -3,12 +3,15 @@ import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, Scro
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../services/api';
+import { logger } from '../services/logger';
+import DebugPanel from '../components/DebugPanel';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   // Email validation function
   const isValidEmail = (email: string): boolean => {
@@ -23,15 +26,18 @@ export default function LoginScreen() {
     // Validate email
     if (!email.trim()) {
       setError('Please enter your email address');
+      logger.warn('Login attempt with empty email');
       return;
     }
 
     if (!isValidEmail(email.trim())) {
       setError('Please enter a valid email address');
+      logger.warn('Login attempt with invalid email', { email: email.trim() });
       return;
     }
 
     setIsLoading(true);
+    logger.info('Attempting to send OTP', { email: email.trim() });
 
     try {
       // Reset the JWT
@@ -42,15 +48,26 @@ export default function LoginScreen() {
         email: email.trim(),
       });
 
+      logger.info('Send OTP response received', { 
+        success: response.success,
+        hasData: !!response.data,
+        error: response.error 
+      });
+
       if (response.success && response.data) {
         // Navigate to OTP verification screen
-        console.info('Sending data', email, response.data.session_token);
+        logger.info('Navigating to OTP verification', { 
+          email: email.trim(),
+          hasSessionToken: !!response.data.session_token 
+        });
+        
         (navigation as any).navigate('OTPVerification', {
           email: email.trim(),
           sessionToken: response.data.session_token,
         });
       } else {
         // Show error message
+        logger.error('Send OTP failed', { error: response.error });
         
         if (response.error?.code === "HTTP_404") {
           setError("User not found")
@@ -60,9 +77,22 @@ export default function LoginScreen() {
         setError(response.error?.message || 'Failed to send OTP. Please try again.');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      setError(JSON.stringify(err));
-      console.error('Error sending OTP:', err);
+      // Detailed error logging for debugging
+      logger.error('Exception during send OTP', {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        type: typeof err,
+        stringified: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+      });
+      
+      // Show detailed error message in development
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'object' && err !== null
+        ? JSON.stringify(err)
+        : 'An unexpected error occurred. Please try again.';
+      
+      setError(__DEV__ ? errorMessage : 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +103,17 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-[#f3eee5]"
     >
+      {/* Debug Button - Only visible in development */}
+      {__DEV__ && (
+        <TouchableOpacity
+          onPress={() => setShowDebugPanel(true)}
+          className="absolute top-12 right-4 z-50 bg-red-600 rounded-full p-3 shadow-lg"
+          style={{ elevation: 5 }}
+        >
+          <Ionicons name="bug" size={24} color="#FFF" />
+        </TouchableOpacity>
+      )}
+
       <ScrollView 
         className="flex-1" 
         contentContainerStyle={{ flexGrow: 1 }}
@@ -154,6 +195,9 @@ export default function LoginScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Debug Panel */}
+      <DebugPanel visible={showDebugPanel} onClose={() => setShowDebugPanel(false)} />
     </KeyboardAvoidingView>
   );
 }
