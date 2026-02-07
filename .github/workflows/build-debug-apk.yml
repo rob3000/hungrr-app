@@ -1,4 +1,4 @@
-name: Build Debug APK with Debug Panel
+name: Build Debug APK (Quick Test)
 
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
       - name: EAS BUILD
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --profile debug --platform android --clear-cache --non-interactive --local --output=./app-debug.apk
+        run: eas build --profile preview --platform android --clear-cache --non-interactive --local --output=./app-release.apk
 
       - name: Rename APK
         run: |
