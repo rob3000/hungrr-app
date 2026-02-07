@@ -56,7 +56,7 @@ jobs:
       - name: Rename APK
         run: |
           TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          mv app-debug.apk hungrr-debug-${TIMESTAMP}.apk
+          mv app-release.apk hungrr-debug-${TIMESTAMP}.apk
           echo "APK_NAME=hungrr-debug-${TIMESTAMP}.apk" >> $GITHUB_ENV
 
       - name: Upload APK as Artifact
@@ -77,5 +77,6 @@ jobs:
             core.notice(`✅ Debug APK built successfully!`);
             core.notice(`📦 Download from: https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`);
             core.notice(`📱 Install on your device and test!`);
+
 
 
