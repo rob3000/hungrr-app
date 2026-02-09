@@ -184,17 +184,6 @@ export default function SettingsScreen() {
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="bg-white pt-12 pb-6 px-6">
-          <View className="flex-row items-center justify-between mb-6">
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
-            >
-              <Ionicons name="arrow-back" size={24} color="#374151" />
-            </TouchableOpacity>
-            <Text className="text-xl font-bold text-gray-900">Settings</Text>
-            <View className="w-10" />
-          </View>
-
           {/* Profile Section */}
           <View className="items-center">
             <View className="w-24 h-24 rounded-full bg-[#2d5f4f] items-center justify-center mb-4">

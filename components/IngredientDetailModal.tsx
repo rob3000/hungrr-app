@@ -1,39 +1,14 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Ingredient } from '../context/SavedItemsContext';
+import { IngredientData } from '../context/SavedItemsContext';
+import { getSafetyLevelColor } from './SafetyRating';
 
 interface IngredientDetailModalProps {
-  ingredient: Ingredient | null;
+  ingredient: IngredientData | null;
   visible: boolean;
   onClose: () => void;
 }
-
-// Safety level colors
-const SAFETY_COLORS = {
-  SAFE: {
-    background: '#D1FAE5',
-    text: '#065F46',
-    border: '#10B981',
-  },
-  CAUTION: {
-    background: '#FEF3C7',
-    text: '#92400E',
-    border: '#F59E0B',
-  },
-  AVOID: {
-    background: '#FEE2E2',
-    text: '#991B1B',
-    border: '#EF4444',
-  },
-};
-
-// FODMAP rating colors
-const FODMAP_COLORS = {
-  LOW_FODMAP: '#10B981',
-  HIGH_FODMAP: '#EF4444',
-  GLUTEN_FREE: '#3B82F6',
-};
 
 export const IngredientDetailModal: React.FC<IngredientDetailModalProps> = ({
   ingredient,
@@ -42,8 +17,8 @@ export const IngredientDetailModal: React.FC<IngredientDetailModalProps> = ({
 }) => {
   if (!ingredient) return null;
 
-  const safetyColor = SAFETY_COLORS[ingredient.safetyLevel];
-  const fodmapColor = FODMAP_COLORS[ingredient.fodmapRating];
+  const safetyColor = getSafetyLevelColor() //SAFETY_COLORS[ingredient.safetyLevel];
+  const fodmapColor = getSafetyLevelColor() // FODMAP_COLORS[ingredient.fodmapRating];
 
   return (
     <Modal

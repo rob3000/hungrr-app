@@ -231,7 +231,7 @@ export default function OTPVerificationScreen() {
           {/* Header */}
           <View className="mb-8">
             <Text className="text-3xl font-bold text-[#2d4a3e] mb-3">
-              'Verify Your Email
+              Verify Your Email
             </Text>
             <Text className="text-base text-gray-600">
               We've sent a 6-digit code to{' '}
