@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Product } from '../services/api';
+import { apiClient, Product } from '../services/api';
 import { useSavedItems } from '../context/SavedItemsContext';
 import SubscriptionModal from '../components/SubscriptionModal';
 
@@ -37,9 +37,22 @@ export default function ProductDetailScreen() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
+
   
-  const product = (route.params as any)?.product as Product;
-  console.info('THE PRODUCT!', product)
+  const productParam = (route.params as any)?.product as Product;
+  const barcode = (route.params as any)?.barcode as string;
+  const [product, setProduct] = useState<null | Product>(productParam)
+  console.info('THE PRODUCT!', product, barcode)
+
+  // If we have a barcode, we shold fetch the data.
+  useEffect(() => {
+    apiClient.scanProduct(barcode).then((result) => {
+      if (result.data) {
+        setProduct(result.data.product)
+      }
+    });
+  }, [])
+
   const handleSaveProduct = async () => {
     if (!product) return;
     

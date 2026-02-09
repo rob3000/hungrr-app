@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { storage, STORAGE_KEYS } from '../services/storage';
 import { useSubscription } from './SubscriptionContext';
-import { apiClient, Product } from '../services/api';
+import { apiClient, Product, IngredientData } from '../services/api';
 import NetInfo from '@react-native-community/netinfo';
 
 // Re-export types from API service for convenience
-export type { Product };
+export type { Product, IngredientData };
 
 export interface SavedProduct {
   id: number;

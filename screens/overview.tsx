@@ -139,7 +139,8 @@ export default function Overview() {
               onPress={() => navigation.navigate('Camera')}
             >
               <Ionicons name="barcode-outline" size={60} color="white" />
-              <Text className="text-white font-bold mt-2 tracking-wider">SCAN BARCODE</Text>
+              <Text className="text-white font-bold mt-2 tracking-wider">SCAN</Text>
+              <Text className="text-white font-bold tracking-wider">BARCODE</Text>
             </TouchableOpacity>
           </View>
         </View>

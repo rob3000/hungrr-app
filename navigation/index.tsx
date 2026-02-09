@@ -61,8 +61,8 @@ const Stack = createStackNavigator({
           </View>
         ),
         headerRight: () => (
-          <View className="flex-row items-center space-x-4 mr-8">
-            <TouchableOpacity>
+          <View className="flex-row items-center space-x-4 mr-4">
+            <TouchableOpacity className="mr-4">
               <Ionicons name="notifications-outline" size={24} color="#374151" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Settings')}>

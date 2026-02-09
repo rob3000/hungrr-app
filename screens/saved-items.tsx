@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSavedItems, SavedProduct } from '../context/SavedItemsContext';
+import { getSafetyLevelColor } from 'components/SafetyRating';
 
 // Safety level colors
 const SAFETY_COLORS = {
@@ -214,7 +215,7 @@ export default function SavedItemsScreen() {
         <ScrollView className="flex-1 px-4 pt-4">
           {filteredItems.map((item) => {
             const safetyRating = (item.product.safety_rating?.toUpperCase() ?? 'UNKNOWN') as keyof typeof SAFETY_COLORS;
-            const safetyColor = SAFETY_COLORS[safetyRating];
+            const safetyColor = getSafetyLevelColor(safetyRating)
             const isMenuOpen = menuOpenForId === item.id;
 
             return (
