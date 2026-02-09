@@ -141,11 +141,6 @@ export default function Overview() {
               <Ionicons name="barcode-outline" size={60} color="white" />
               <Text className="text-white font-bold mt-2 tracking-wider">SCAN BARCODE</Text>
             </TouchableOpacity>
-
-            <View className="flex-row items-center mt-6">
-              <Ionicons name="shield-checkmark-outline" size={14} color="#9CA3AF" />
-              <Text className="text-xs text-gray-400 ml-1">POWERED BY MONASH FOOD DATA</Text>
-            </View>
           </View>
         </View>
 
