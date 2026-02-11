@@ -4,6 +4,7 @@ import { View, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Login from '../screens/login';
 import Signup from '../screens/signup';
+import Welcome from '../screens/welcome';
 import OTPVerification from '../screens/otp-verification';
 import DietaryProfile from '../screens/dietary-profile';
 import Overview from '../screens/overview';
@@ -16,10 +17,17 @@ import Settings from '../screens/settings';
 import SavedItems from '../screens/saved-items';
 import Checkout from '../screens/checkout';
 import WelcomeToPro from '../screens/welcome-to-pro';
+import Search from '../screens/search';
 import { BackButton } from '../components/BackButton';
 
 const Stack = createStackNavigator({
   screens: {
+    Welcome: {
+      screen: Welcome,
+      options: {
+        headerShown: false,
+      },
+    },
     Login: {
       screen: Login,
       options: {
@@ -54,31 +62,10 @@ const Stack = createStackNavigator({
     },
     Overview: {
       screen: Overview,
-      options: ({ navigation }) => ({
-        headerTitle: () => (
-          <View className="flex-row items-center">
-            <Image source={require('../assets/logo.png')} height={8} width={8} resizeMode="contain" className='w-32'/>
-          </View>
-        ),
-        headerRight: () => (
-          <View className="flex-row items-center space-x-4 mr-4">
-            <TouchableOpacity className="mr-4">
-              <Ionicons name="notifications-outline" size={24} color="#374151" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-              <View className="w-8 h-8 rounded-full bg-[#2d5f4f] items-center justify-center">
-                <Ionicons name="person" size={18} color="white" />
-              </View>
-            </TouchableOpacity>
-          </View>
-        ),
-        headerLeft: () => null,
-        headerStyle: {
-          backgroundColor: '#f3eee5',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-      }),
+      options: {
+        headerShown: false,
+        gestureEnabled: false,
+      },
     },
     Camera: {
       screen: Camera,
@@ -111,6 +98,12 @@ const Stack = createStackNavigator({
         headerShown: false,
       },
     },
+    Search: {
+      screen: Search,
+      options: {
+        headerShown: false,
+      },
+    },
     Details: {
       screen: Details,
       options: ({ navigation }) => ({
@@ -122,7 +115,7 @@ const Stack = createStackNavigator({
       options: ({ navigation }) => ({
         headerLeft: () => <BackButton onPress={navigation.goBack} />,
         headerStyle: {
-          backgroundColor: '#f3eee5',
+          backgroundColor: '#FFFFFF',
           elevation: 0,
           shadowOpacity: 0,
         },
