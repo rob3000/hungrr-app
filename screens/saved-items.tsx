@@ -144,17 +144,17 @@ export default function SavedItemsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-[#f3eee5]">
+    <View className="flex-1 bg-[#D1E758]">
       {/* Header */}
-      <View className="bg-white pt-12 pb-4 px-4">
+      <View className="pt-12 pb-4 px-6">
         <Text className="text-2xl font-bold text-gray-900 mb-4">Saved Items</Text>
 
         {/* Search Bar */}
-        <View className="bg-gray-100 rounded-2xl px-4 py-3 flex-row items-center mb-4">
+        <View className="bg-white rounded-2xl px-4 py-3.5 flex-row items-center mb-4 shadow-sm">
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
             className="flex-1 ml-2 text-gray-900"
-            placeholder="Search by name or brand..."
+            placeholder="Search foods or brands..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -179,11 +179,11 @@ export default function SavedItemsScreen() {
               <TouchableOpacity
                 key={chip.id}
                 onPress={() => toggleFilter(chip.id)}
-                className="rounded-full px-4 py-2 mr-2"
+                className="rounded-full px-4 py-2 mr-2 shadow-sm"
                 style={{
-                  backgroundColor: isActive ? '#2D5F4F' : '#F3F4F6',
+                  backgroundColor: isActive ? '#181A2C' : '#FFFFFF',
                   borderWidth: 1,
-                  borderColor: isActive ? '#2D5F4F' : '#E5E7EB',
+                  borderColor: isActive ? '#181A2C' : '#E5E7EB',
                 }}
               >
                 <Text
@@ -201,25 +201,25 @@ export default function SavedItemsScreen() {
       {/* Items List */}
       {filteredItems.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="bookmark-outline" size={64} color="#D1D5DB" />
+          <Ionicons name="bookmark-outline" size={64} color="#181A2C" />
           <Text className="text-xl font-bold text-gray-900 mt-4 text-center">
             {savedItems.length === 0 ? 'No Saved Items' : 'No Results Found'}
           </Text>
-          <Text className="text-gray-600 mt-2 text-center">
+          <Text className="text-gray-700 mt-2 text-center">
             {savedItems.length === 0
               ? 'Start scanning products and save them to your library'
               : 'Try adjusting your search or filters'}
           </Text>
         </View>
       ) : (
-        <ScrollView className="flex-1 px-4 pt-4">
+        <ScrollView className="flex-1 px-6 pt-4 pb-24">{/* Added bottom padding for nav */}
           {filteredItems.map((item) => {
             const safetyRating = (item.product.safety_rating?.toUpperCase() ?? 'UNKNOWN') as keyof typeof SAFETY_COLORS;
             const safetyColor = getSafetyLevelColor(safetyRating)
             const isMenuOpen = menuOpenForId === item.id;
 
             return (
-              <View key={item.id} className="bg-white rounded-2xl p-4 mb-3 relative">
+              <View key={item.id} className="bg-white rounded-3xl p-4 mb-3 relative shadow-sm">
                 <TouchableOpacity
                   onPress={() => handleViewDetails(item.product.barcode)}
                   activeOpacity={0.7}
@@ -229,10 +229,10 @@ export default function SavedItemsScreen() {
                     {item.product.images && item.product.images.length > 0 ? (
                       <Image
                         source={{ uri: item.product.images[0] }}
-                        className="w-20 h-20 rounded-xl"
+                        className="w-20 h-20 rounded-2xl"
                       />
                     ) : (
-                      <View className="w-20 h-20 rounded-xl bg-gray-200 items-center justify-center">
+                      <View className="w-20 h-20 rounded-2xl bg-gray-200 items-center justify-center">
                         <Ionicons name="image-outline" size={32} color="#9CA3AF" />
                       </View>
                     )}
@@ -310,6 +310,46 @@ export default function SavedItemsScreen() {
           <View className="h-4" />
         </ScrollView>
       )}
+
+      {/* Bottom Navigation */}
+      <View className="absolute bottom-0 left-0 right-0 bg-[#181A2C] rounded-t-3xl mx-4 mb-4">
+        <View className="flex-row items-center justify-around py-4 px-6">
+          <TouchableOpacity 
+            className="items-center flex-1"
+            onPress={() => (navigation as any).navigate('Overview')}
+          >
+            <Ionicons name="home-outline" size={24} color="#9CA3AF" />
+            <Text className="text-gray-400 text-xs mt-1">HOME</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity className="items-center flex-1">
+            <Ionicons name="bookmark" size={24} color="#D1E758" />
+            <Text className="text-[#D1E758] text-xs mt-1 font-medium">SAVED</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            className="items-center flex-1"
+            onPress={() => (navigation as any).navigate('Camera')}
+          >
+            <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center -mt-6">
+              <Ionicons name="scan" size={28} color="#181A2C" />
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity className="items-center flex-1">
+            <Ionicons name="compass-outline" size={24} color="#9CA3AF" />
+            <Text className="text-gray-400 text-xs mt-1">EXPLORE</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            className="items-center flex-1"
+            onPress={() => (navigation as any).navigate('Settings')}
+          >
+            <Ionicons name="person-outline" size={24} color="#9CA3AF" />
+            <Text className="text-gray-400 text-xs mt-1">PROFILE</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }

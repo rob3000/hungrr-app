@@ -133,6 +133,19 @@ export interface ProductScanResponse {
   source: string;
 }
 
+export interface SearchProductsRequest {
+  query: string;
+  page: number;
+  page_size: number;
+}
+
+export interface SearchProductsResponse {
+  products: Product[];
+  total_count: number;
+  page: number;
+  page_size: number;
+}
+
 // Subscription Types
 export interface SubscriptionPlan {
   name: string;
@@ -405,6 +418,18 @@ class APIClient {
    */
   async scanProduct(barcode: string): Promise<APIResponse<ProductScanResponse>> {
     return this.get<ProductScanResponse>(`/products/barcode/${barcode}`);
+  }
+
+  /**
+   * Search products by name or brand
+   */
+  async searchProducts(query: string, page: number = 0, pageSize: number = 20): Promise<APIResponse<SearchProductsResponse>> {
+    const body: SearchProductsRequest = {
+      query,
+      page,
+      page_size: pageSize,
+    };
+    return this.post<SearchProductsResponse>('/products/search', body);
   }
 
   /**

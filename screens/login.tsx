@@ -105,7 +105,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-[#f3eee5]"
+      className="flex-1 bg-[#D1E758]"
     >
       {/* Debug Button - Visible in dev mode or after 5 taps on logo */}
       {isDebugEnabled && (
@@ -123,50 +123,49 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View className="items-center pt-16 pb-8">
-          <TouchableOpacity 
-            onPress={() => {
-              const newCount = debugTapCount + 1;
-              setDebugTapCount(newCount);
-              if (newCount === 5) {
-                logger.info('Debug mode enabled via logo taps');
-              }
-            }}
-            activeOpacity={0.8}
+        {/* Back Button */}
+        <View className="px-6 pt-12">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Welcome')}
+            className="mb-4"
+            disabled={isLoading}
           >
-            <Image 
-              source={require('../assets/logo.png')} 
-              height={8} 
-              width={8} 
-              resizeMode="contain" 
-              className='w-44'
-            />
+            <Ionicons name="arrow-back" size={24} color="#181A2C" />
           </TouchableOpacity>
-          {debugTapCount > 0 && debugTapCount < 5 && (
-            <Text className="text-xs text-gray-400 mt-2">
-              {5 - debugTapCount} more taps to enable debug mode
-            </Text>
-          )}
         </View>
 
-        {/* Login Form */}
-        <View className="px-6">
-          <View className="p-6 mb-6">
-            <Text className="text-2xl font-bold text-[#2d4a3e] mb-2 text-center">
-              Welcome to hungrr
-            </Text>
-            <Text className="text-base text-gray-600 mb-6 text-center">
-              Enter your email to get started
-            </Text>
-            
+        {/* Header */}
+        <View className="items-center px-6 pb-8">
+          <View className="flex-row items-center mb-12">
+            <View className="w-8 h-8 bg-black rounded-lg items-center justify-center mr-3">
+              <Text className="text-[#D1E758] font-bold text-lg">h</Text>
+            </View>
+            <Text className="text-2xl font-bold text-black">hungrr</Text>
+          </View>
+          
+          <Text className="text-3xl font-bold text-black mb-2">Welcome Back</Text>
+          <Text className="text-black/70 text-center text-lg">
+            Log in to continue your diet journey.
+          </Text>
+        </View>
+
+        {/* Login Form Card - Floating */}
+        <View className="mx-6 mb-8">
+          <View className="bg-white rounded-3xl p-6" style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          }}>
             {/* Email Input */}
-            <View className="mb-4">
-              <View className={`bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 ${error ? 'border-red-500' : 'border-gray-200'}`}>
+            <View className="">
+              <Text className="text-gray-500 text-sm font-medium uppercase tracking-wide">EMAIL ADDRESS</Text>
+              <View className={`bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center ${error ? 'border-2 border-red-500' : ''}`}>
                 <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
                 <TextInput
-                  className="flex-1 ml-3 text-gray-900"
-                  placeholder="Enter your email"
+                  className="flex-1 ml-3 text-gray-900 text-lg"
+                  placeholder="hello@example.com"
                   placeholderTextColor="#9CA3AF"
                   value={email}
                   onChangeText={(text) => {
@@ -179,40 +178,42 @@ export default function LoginScreen() {
                   editable={!isLoading}
                 />
               </View>
-              {error && (
-                <View className="mt-2 flex-row items-center">
-                  <Ionicons name="alert-circle" size={16} color="#EF4444" />
-                  <Text className="text-red-500 text-sm ml-1">{error}</Text>
-                </View>
-              )}
             </View>
 
-            {/* Continue Button */}
-            <TouchableOpacity
-              className={`rounded-2xl py-4 items-center mb-4 ${isLoading ? 'bg-gray-400' : 'bg-[#2d4a3e]'}`}
-              onPress={handleSendOTP}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text className="text-white font-semibold text-lg">Continue</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Info Text */}
-            <Text className="text-sm text-gray-500 text-center">
-              We'll send you a verification code to confirm your email
-            </Text>
+            {/* Error Message */}
+            {error && (
+              <View className="mb-4 flex-row items-center">
+                <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                <Text className="text-red-500 text-sm ml-1">{error}</Text>
+              </View>
+            )}
           </View>
+        </View>
 
-          {/* Sign Up Link */}
-          <View className="flex-row justify-center items-center mb-8">
-            <Text className="text-gray-600">Don't have an account? </Text>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('Signup')} disabled={isLoading}>
-              <Text className="text-[#2d4a3e] font-semibold">Sign Up</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Login Button - Outside the card */}
+        <View className="px-6 mb-4">
+          <TouchableOpacity
+            className={`rounded-3xl py-4 items-center flex-row justify-center ${isLoading ? 'bg-gray-400' : 'bg-[#181A2C]'}`}
+            onPress={handleSendOTP}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Text className="text-[#D1E758] font-semibold text-lg mr-2">Log In</Text>
+                <Ionicons name="arrow-forward" size={20} color="#D1E758" />
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Sign Up Link */}
+        <View className="flex-row justify-center items-center mb-8">
+          <Text className="text-black/70 text-base">Don't have an account? </Text>
+          <TouchableOpacity onPress={() => (navigation as any).navigate('Signup')} disabled={isLoading}>
+            <Text className="text-black font-semibold text-base">Sign up</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 

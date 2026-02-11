@@ -92,7 +92,7 @@ export default function SignupScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-[#f3eee5]"
+      className="flex-1 bg-[#D1E758]"
     >
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* Back Button */}
@@ -102,88 +102,99 @@ export default function SignupScreen() {
             className="mb-4"
             disabled={isLoading}
           >
-            <Ionicons name="arrow-back" size={24} color="#2d4a3e" />
+            <Ionicons name="arrow-back" size={24} color="#181A2C" />
           </TouchableOpacity>
         </View>
 
         {/* Header */}
         <View className="items-center px-6 pb-8">
-          <Image 
-            source={require('../assets/logo.png')} 
-            height={8} 
-            width={8} 
-            resizeMode="contain" 
-            className='w-44 mb-4'
-          />
-          <Text className="text-3xl font-bold text-[#2d4a3e] mb-2">Create Account</Text>
-          <Text className="text-gray-600 text-center">
+          <View className="flex-row items-center mb-12">
+            <View className="w-8 h-8 bg-black rounded-lg items-center justify-center mr-3">
+              <Text className="text-[#D1E758] font-bold text-lg">h</Text>
+            </View>
+            <Text className="text-2xl font-bold text-black">hungrr</Text>
+          </View>
+          
+          <Text className="text-3xl font-bold text-black mb-2">Create Account</Text>
+          <Text className="text-black/70 text-center text-lg">
             Join hungrr to discover IBS-safe foods
           </Text>
         </View>
 
-        {/* Signup Form */}
-        <View className="px-6">
-          {/* Name Input */}
-          <View className="mb-4">
-            <Text className="text-gray-700 text-sm font-medium mb-2">First Name</Text>
-            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
-              <Ionicons name="person-outline" size={20} color="#9CA3AF" />
-              <TextInput
-                className="flex-1 ml-3 text-gray-900"
-                placeholder="Enter your firstname"
-                placeholderTextColor="#9CA3AF"
-                value={firstName}
-                onChangeText={setFirstName}
-                editable={!isLoading}
-              />
+        {/* Signup Form Card - Floating */}
+        <View className="mx-6 mb-8">
+          <View className="bg-white rounded-3xl p-6" style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          }}>
+            {/* First Name Input */}
+            <View className="mb-6">
+              <Text className="text-gray-500 text-sm font-medium mb-3 uppercase tracking-wide">FIRST NAME</Text>
+              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
+                <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+                <TextInput
+                  className="flex-1 ml-3 text-gray-900 text-lg"
+                  placeholder="Enter your first name"
+                  placeholderTextColor="#9CA3AF"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  editable={!isLoading}
+                />
+              </View>
             </View>
+
+            {/* Last Name Input */}
+            <View className="mb-6">
+              <Text className="text-gray-500 text-sm font-medium mb-3 uppercase tracking-wide">SURNAME</Text>
+              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
+                <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+                <TextInput
+                  className="flex-1 ml-3 text-gray-900 text-lg"
+                  placeholder="Enter your surname"
+                  placeholderTextColor="#9CA3AF"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
+            {/* Email Input */}
+            <View className="mb-6">
+              <Text className="text-gray-500 text-sm font-medium mb-3 uppercase tracking-wide">EMAIL ADDRESS</Text>
+              <View className="bg-gray-50 rounded-2xl px-4 py-4 flex-row items-center">
+                <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
+                <TextInput
+                  className="flex-1 ml-3 text-gray-900 text-lg"
+                  placeholder="hello@example.com"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
+            {/* Error Message */}
+            {error && (
+              <View className="flex-row items-center mb-4 bg-red-50 rounded-xl p-3">
+                <Ionicons name="alert-circle" size={20} color="#EF4444" />
+                <Text className="text-red-500 text-sm ml-2 flex-1">{error}</Text>
+              </View>
+            )}
           </View>
+        </View>
 
-          <View className="mb-4">
-            <Text className="text-gray-700 text-sm font-medium mb-2">Surname</Text>
-            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
-              <Ionicons name="person-outline" size={20} color="#9CA3AF" />
-              <TextInput
-                className="flex-1 ml-3 text-gray-900"
-                placeholder="Enter your surname"
-                placeholderTextColor="#9CA3AF"
-                value={lastName}
-                onChangeText={setLastName}
-                editable={!isLoading}
-              />
-            </View>
-          </View>
-
-          {/* Email Input */}
-          <View className="mb-6">
-            <Text className="text-gray-700 text-sm font-medium mb-2">Email Address</Text>
-            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border-2 border-gray-200">
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
-              <TextInput
-                className="flex-1 ml-3 text-gray-900"
-                placeholder="Enter your email"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!isLoading}
-              />
-            </View>
-          </View>
-
-          {/* Error Message */}
-          {error && (
-            <View className="flex-row items-center mb-4 bg-red-50 rounded-xl p-3">
-              <Ionicons name="alert-circle" size={20} color="#EF4444" />
-              <Text className="text-red-500 text-sm ml-2 flex-1">{error}</Text>
-            </View>
-          )}
-
-          {/* Signup Button */}
+        {/* Signup Button - Outside the card */}
+        <View className="px-6 mb-6">
           <TouchableOpacity
-            className={`rounded-2xl py-4 items-center mb-6 ${
-              isLoading ? 'bg-gray-400' : 'bg-[#2d4a3e]'
+            className={`rounded-3xl py-4 items-center flex-row justify-center ${
+              isLoading ? 'bg-gray-400' : 'bg-[#181A2C]'
             }`}
             onPress={handleSignup}
             disabled={isLoading}
@@ -191,22 +202,27 @@ export default function SignupScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text className="text-white font-semibold text-lg">Continue</Text>
+              <>
+                <Text className="text-white font-semibold text-lg mr-2">Continue</Text>
+                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+              </>
             )}
           </TouchableOpacity>
+        </View>
 
-          {/* Privacy Notice */}
-          <Text className="text-xs text-gray-500 text-center mb-6 px-4">
+        {/* Privacy Notice */}
+        <View className="px-6 mb-6">
+          <Text className="text-sm text-black/60 text-center">
             By continuing, you agree to our Terms of Service and Privacy Policy
           </Text>
+        </View>
 
-          {/* Login Link */}
-          <View className="flex-row justify-center items-center mb-8">
-            <Text className="text-gray-600">Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login' as never)} disabled={isLoading}>
-              <Text className="text-[#2d4a3e] font-semibold">Sign In</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Login Link */}
+        <View className="flex-row justify-center items-center mb-8">
+          <Text className="text-black/70 text-base">Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login' as never)} disabled={isLoading}>
+            <Text className="text-black font-semibold text-base">Sign In</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -9,12 +9,53 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { UserProfile } from '../context/AuthContext';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Create grid lines
+const GridBackground = () => {
+  const gridSize = 140;
+  const verticalLines = Math.ceil(screenWidth / gridSize) + 1;
+  const horizontalLines = Math.ceil(screenHeight / gridSize) + 1;
+
+  return (
+    <View className="absolute inset-0">
+      {/* Vertical lines */}
+      {Array.from({ length: verticalLines }).map((_, index) => (
+        <View
+          key={`v-${index}`}
+          className="absolute bg-[#181A2C] opacity-30"
+          style={{
+            left: index * gridSize,
+            top: 0,
+            width: 1,
+            height: screenHeight,
+          }}
+        />
+      ))}
+      {/* Horizontal lines */}
+      {Array.from({ length: horizontalLines }).map((_, index) => (
+        <View
+          key={`h-${index}`}
+          className="absolute bg-[#181A2C] opacity-30"
+          style={{
+            left: 0,
+            top: index * gridSize,
+            width: screenWidth,
+            height: 1,
+          }}
+        />
+      ))}
+    </View>
+  );
+};
 
 type OTPVerificationRouteProp = RouteProp<
   {
@@ -213,95 +254,146 @@ export default function OTPVerificationScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-[#f3eee5]"
-    >
-      <ScrollView contentContainerClassName="flex-grow">
-        <View className="flex-1 px-6 pt-16">
-          {/* Back Button */}
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mb-8"
-            disabled={isLoading}
-          >
-            <Ionicons name="arrow-back" size={24} color="#2d4a3e" />
-          </TouchableOpacity>
+    <View className="flex-1 bg-[#D1E758] relative">
+      {/* Grid Background */}
+      <GridBackground />
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1 relative z-10"
+      >
+        <ScrollView 
+          className="flex-1" 
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Header */}
-          <View className="mb-8">
-            <Text className="text-3xl font-bold text-[#2d4a3e] mb-3">
-              Verify Your Email
-            </Text>
-            <Text className="text-base text-gray-600">
-              We've sent a 6-digit code to{' '}
-              <Text className="font-semibold text-gray-800">{email}</Text>
-            </Text>
-          </View>
-
-          {/* OTP Input Fields */}
-          <View className="mb-6">
-            <View className="flex-row justify-between mb-4">
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => {
-                    inputRefs.current[index] = ref;
-                  }}
-                  className={`w-12 h-14 bg-gray-50 rounded-xl text-center text-2xl font-semibold text-gray-900 border-2 ${
-                    error ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  value={digit}
-                  onChangeText={(value) => handleOtpChange(value, index)}
-                  onKeyPress={(e) => handleKeyPress(e, index)}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  selectTextOnFocus
-                  editable={!isLoading}
-                />
-              ))}
-            </View>
-
-            {error && (
-              <View className="flex-row items-center">
-                <Ionicons name="alert-circle" size={16} color="#EF4444" />
-                <Text className="text-red-500 text-sm ml-1">{error}</Text>
+          <View className="items-center pt-16 pb-8">
+            <View className="flex-row items-center">
+              <View className="w-12 h-12 bg-black rounded-2xl items-center justify-center mr-4">
+                <Text className="text-[#D1E758] font-bold text-xl">h</Text>
               </View>
-            )}
+              <Text className="text-3xl font-bold text-black">hungrr</Text>
+            </View>
           </View>
 
-          {/* Verify Button */}
-          <TouchableOpacity
-            className={`rounded-2xl py-4 items-center mb-6 ${
-              isLoading || otp.join('').length !== 6 ? 'bg-gray-400' : 'bg-[#2d4a3e]'
-            }`}
-            onPress={() => handleVerifyOTP()}
-            disabled={isLoading || otp.join('').length !== 6}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-semibold text-lg">Verify Code</Text>
-            )}
-          </TouchableOpacity>
+          {/* Main Card */}
+          <View className="mx-6 mb-8 flex-1">
+            <View className="bg-white rounded-3xl p-8" style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+            }}>
+              {/* Email Icon */}
+              <View className="items-center mb-8">
+                <View className="w-16 h-16 bg-[#D1E758]/20 rounded-full items-center justify-center">
+                  <Ionicons name="mail-outline" size={32} color="#2d3436" />
+                </View>
+              </View>
 
-          {/* Resend OTP */}
-          <View className="items-center">
-            <Text className="text-gray-600 mb-2">Didn't receive the code?</Text>
-            {canResend ? (
-              <TouchableOpacity onPress={handleResendOTP} disabled={isLoading}>
-                <Text className="text-[#2d4a3e] font-semibold text-base">
-                  Resend Code
+              {/* Title and Description */}
+              <View className="items-center mb-8">
+                <Text className="text-2xl font-bold text-black mb-3">
+                  Verify your email
                 </Text>
+                <Text className="text-gray-600 text-center mb-2">
+                  We've sent a 6-digit code to your email.
+                </Text>
+                <Text className="text-black font-semibold text-center">
+                  {email}
+                </Text>
+              </View>
+
+              {/* OTP Input Fields */}
+              <View className="mb-8">
+                <View className="flex-row justify-between mb-4">
+                  {otp.map((digit, index) => (
+                    <View
+                      key={index}
+                      className={`w-12 h-12 rounded-xl border-2 items-center justify-center ${
+                        digit ? 'border-black bg-gray-50' : 'border-gray-300 bg-white'
+                      } ${error ? 'border-red-500' : ''}`}
+                    >
+                      <TextInput
+                        ref={(ref) => {
+                          inputRefs.current[index] = ref;
+                        }}
+                        className="text-xl font-bold text-black text-center w-full h-full"
+                        value={digit}
+                        onChangeText={(value) => handleOtpChange(value, index)}
+                        onKeyPress={(e) => handleKeyPress(e, index)}
+                        keyboardType="number-pad"
+                        maxLength={1}
+                        selectTextOnFocus
+                        editable={!isLoading}
+                        style={{ textAlignVertical: 'center' }}
+                      />
+                    </View>
+                  ))}
+                </View>
+
+                {error && (
+                  <View className="flex-row items-center justify-center">
+                    <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                    <Text className="text-red-500 text-sm ml-1">{error}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Resend Code */}
+              <View className="items-center mb-8">
+                <Text className="text-gray-600 mb-2">Didn't receive the code?</Text>
+                {canResend ? (
+                  <TouchableOpacity onPress={handleResendOTP} disabled={isLoading}>
+                    <Text className="text-black font-semibold text-base">
+                      Resend Code
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View className="items-center">
+                    <Text className="text-black font-semibold">Resend Code</Text>
+                    <Text className="text-gray-500 text-sm">
+                      Resend code in 00:{resendTimer.toString().padStart(2, '0')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Verify Button */}
+              <TouchableOpacity
+                className={`rounded-3xl py-4 items-center flex-row justify-center ${
+                  isLoading || otp.join('').length !== 6 ? 'bg-gray-400' : 'bg-[#2d3436]'
+                }`}
+                onPress={() => handleVerifyOTP()}
+                disabled={isLoading || otp.join('').length !== 6}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text className="text-white font-semibold text-lg mr-2">Verify</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                  </>
+                )}
               </TouchableOpacity>
-            ) : (
-              <Text className="text-gray-500">
-                Resend code in {resendTimer}s
-              </Text>
-            )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          {/* Back to Login */}
+          <View className="px-6 pb-8">
+            <TouchableOpacity 
+              className="flex-row items-center justify-center"
+              onPress={() => navigation.goBack()}
+              disabled={isLoading}
+            >
+              <Ionicons name="arrow-back" size={20} color="#2d3436" />
+              <Text className="text-black font-semibold text-base ml-2">Back to Login</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

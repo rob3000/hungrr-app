@@ -33,7 +33,8 @@
       "backgroundColor": "#f3eee5"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "**/*",
+      "assets/fonts/**/*"
     ],
     "ios": {
       "supportsTablet": true,
