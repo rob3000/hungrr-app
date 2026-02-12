@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSubscription } from '../context/SubscriptionContext';
 import { apiClient } from '../services/api';
-import SubscriptionModal from '../components/SubscriptionModal';
 
 interface SubmitProductResponse {
   success: boolean;
@@ -16,20 +14,11 @@ export default function AddProductScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { barcode } = (route.params as { barcode?: string }) || { barcode: 'Unknown' };
-  const { isPro } = useSubscription();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const handleSubmitForAnalysis = async () => {
-    // Check subscription status before allowing submission
-    if (!isPro) {
-      // Show subscription modal for free users
-      setShowSubscriptionModal(true);
-      return;
-    }
-
-    // Pro users can submit for analysis
+    // Allow all users to submit products for analysis
     setIsSubmitting(true);
     
     try {
@@ -133,13 +122,6 @@ export default function AddProductScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        visible={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        trigger="feature_access"
-      />
     </View>
   );
 }
