@@ -151,59 +151,58 @@ export default function Overview() {
           </View>
 
           {/* Recent Scans */}
-          {recentScans.length > 0 && (
-            <View className="mx-6 mb-6">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-black'}`}>Recent Scans</Text>
-                <TouchableOpacity onPress={() => (navigation as any).navigate('SavedItems')}>
-                  <Text className="text-sm font-semibold text-blue-600">VIEW ALL</Text>
-                </TouchableOpacity>
-              </View>
-              
-              {recentScans.slice(0, 3).map((product) => {
-                const safetyRating = (product.safety_rating?.toUpperCase() ?? 'UNKNOWN') as 'SAFE' | 'CAUTION' | 'AVOID';
-                const safetyColors = getSafetyLevelColor(safetyRating);
-                return (
-                  <TouchableOpacity
-                    key={product.id}
-                    className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-4 mb-3 flex-row items-center border`}
-                    style={{
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                      elevation: 2,
-                    }}
-                    onPress={() => (navigation as any).navigate('ProductDetail', { barcode: product.barcode })}
-                  >
-                    <View className={`w-12 h-12 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} mr-4 overflow-hidden`}>
-                      {product.images && product.images.length > 0 ? (
-                        <Image
-                          source={{ uri: product.images[0] }}
-                          className="w-full h-full"
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View className="w-full h-full items-center justify-center">
-                          <Ionicons name="image-outline" size={20} color="#9CA3AF" />
-                        </View>
-                      )}
-                    </View>
-                    <View className="flex-1">
-                      <Text className={`${darkMode ? 'text-white' : 'text-black'} font-semibold mb-1`}>{product.name}</Text>
-                      <Text className="text-gray-500 text-sm">Scanned 2m ago</Text>
-                    </View>
-                    <View className={`px-3 py-1.5 rounded-full flex-row items-center ${safetyColors.bg}`}>
-                      <View className={`w-2 h-2 rounded-full ${safetyRating === 'SAFE' ? 'bg-green-500' : safetyRating === 'CAUTION' ? 'bg-yellow-500' : 'bg-red-500'} mr-1.5`} />
-                      <Text className={`text-xs font-bold ${safetyColors.text}`}>
-                        {safetyRating === 'SAFE' ? 'Safe' : safetyRating === 'CAUTION' ? 'Risky' : 'Avoid'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+          <View className="mx-6 mb-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-black'}`}>Recent Scans</Text>
+              <TouchableOpacity onPress={() => (navigation as any).navigate('SavedItems')}>
+                <Text className="text-sm font-semibold text-blue-600">VIEW ALL</Text>
+              </TouchableOpacity>
             </View>
-          )}
+            
+            {recentScans.slice(0, 3).map((product) => {
+              const safetyRating = (product.safety_rating?.toUpperCase() ?? 'UNKNOWN') as 'SAFE' | 'CAUTION' | 'AVOID';
+              const safetyColors = getSafetyLevelColor(safetyRating);
+              return (
+                <TouchableOpacity
+                  key={product.id}
+                  className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-4 mb-3 flex-row items-center border`}
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 2,
+                  }}
+                  onPress={() => (navigation as any).navigate('ProductDetail', { barcode: product.barcode })}
+                >
+                  <View className={`w-12 h-12 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} mr-4 overflow-hidden`}>
+                    {product.images && product.images.length > 0 ? (
+                      <Image
+                        source={{ uri: product.images[0] }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View className="w-full h-full items-center justify-center">
+                        <Ionicons name="image-outline" size={20} color="#9CA3AF" />
+                      </View>
+                    )}
+                  </View>
+                  <View className="flex-1">
+                    <Text className={`${darkMode ? 'text-white' : 'text-black'} font-semibold mb-1`}>{product.name}</Text>
+                    <Text className="text-gray-500 text-sm">Scanned 2m ago</Text>
+                  </View>
+                  <View className={`px-3 py-1.5 rounded-full flex-row items-center ${safetyColors.bg}`}>
+                    <View className={`w-2 h-2 rounded-full ${safetyRating === 'SAFE' ? 'bg-green-500' : safetyRating === 'CAUTION' ? 'bg-yellow-500' : 'bg-red-500'} mr-1.5`} />
+                    <Text className={`text-xs font-bold ${safetyColors.text}`}>
+                      {safetyRating === 'SAFE' ? 'Safe' : safetyRating === 'CAUTION' ? 'Risky' : 'Avoid'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+         
 
           {/* Error State - Show fallback data */}
           {error && !isLoading && recentScans.length === 0 && (
