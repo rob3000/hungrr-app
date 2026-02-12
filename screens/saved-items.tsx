@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSavedItems, SavedProduct } from '../context/SavedItemsContext';
+import { useSavedItems } from '../context/SavedItemsContext';
 import { getSafetyLevelColor } from 'components/SafetyRating';
+import { NavigationBar } from '../components/NavigationBar';
 
 // Safety level colors
 const SAFETY_COLORS = {
@@ -136,21 +137,21 @@ export default function SavedItemsScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-[#f3eee5] items-center justify-center">
-        <ActivityIndicator size="large" color="#2D5F4F" />
+      <View className="flex-1 bg-gray-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#181A2C" />
         <Text className="text-gray-600 mt-4">Loading saved items...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#D1E758]">
+    <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="pt-12 pb-4 px-6">
+      <View className="bg-white pt-12 pb-6 px-6">
         <Text className="text-2xl font-bold text-gray-900 mb-4">Saved Items</Text>
 
         {/* Search Bar */}
-        <View className="bg-white rounded-2xl px-4 py-3.5 flex-row items-center mb-4 shadow-sm">
+        <View className="bg-gray-50 rounded-2xl px-4 py-3.5 flex-row items-center mb-4">
           <Ionicons name="search" size={20} color="#9CA3AF" />
           <TextInput
             className="flex-1 ml-2 text-gray-900"
@@ -179,7 +180,7 @@ export default function SavedItemsScreen() {
               <TouchableOpacity
                 key={chip.id}
                 onPress={() => toggleFilter(chip.id)}
-                className="rounded-full px-4 py-2 mr-2 shadow-sm"
+                className="rounded-full px-4 py-2 mr-2"
                 style={{
                   backgroundColor: isActive ? '#181A2C' : '#FFFFFF',
                   borderWidth: 1,
@@ -201,11 +202,11 @@ export default function SavedItemsScreen() {
       {/* Items List */}
       {filteredItems.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="bookmark-outline" size={64} color="#181A2C" />
+          <Ionicons name="bookmark-outline" size={64} color="#9CA3AF" />
           <Text className="text-xl font-bold text-gray-900 mt-4 text-center">
             {savedItems.length === 0 ? 'No Saved Items' : 'No Results Found'}
           </Text>
-          <Text className="text-gray-700 mt-2 text-center">
+          <Text className="text-gray-500 mt-2 text-center">
             {savedItems.length === 0
               ? 'Start scanning products and save them to your library'
               : 'Try adjusting your search or filters'}
@@ -219,7 +220,7 @@ export default function SavedItemsScreen() {
             const isMenuOpen = menuOpenForId === item.id;
 
             return (
-              <View key={item.id} className="bg-white rounded-3xl p-4 mb-3 relative shadow-sm">
+              <View key={item.id} className="bg-white rounded-2xl p-4 mb-3 relative">
                 <TouchableOpacity
                   onPress={() => handleViewDetails(item.product.barcode)}
                   activeOpacity={0.7}
@@ -229,11 +230,11 @@ export default function SavedItemsScreen() {
                     {item.product.images && item.product.images.length > 0 ? (
                       <Image
                         source={{ uri: item.product.images[0] }}
-                        className="w-20 h-20 rounded-2xl"
+                        className="w-16 h-16 rounded-xl"
                       />
                     ) : (
-                      <View className="w-20 h-20 rounded-2xl bg-gray-200 items-center justify-center">
-                        <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                      <View className="w-16 h-16 rounded-xl bg-gray-100 items-center justify-center">
+                        <Ionicons name="image-outline" size={24} color="#9CA3AF" />
                       </View>
                     )}
 
@@ -305,51 +306,11 @@ export default function SavedItemsScreen() {
               </View>
             );
           })}
-
-          {/* Bottom padding */}
-          <View className="h-4" />
         </ScrollView>
       )}
 
-      {/* Bottom Navigation */}
-      <View className="absolute bottom-0 left-0 right-0 bg-[#181A2C] rounded-t-3xl mx-4 mb-4">
-        <View className="flex-row items-center justify-around py-4 px-6">
-          <TouchableOpacity 
-            className="items-center flex-1"
-            onPress={() => (navigation as any).navigate('Overview')}
-          >
-            <Ionicons name="home-outline" size={24} color="#9CA3AF" />
-            <Text className="text-gray-400 text-xs mt-1">HOME</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center flex-1">
-            <Ionicons name="bookmark" size={24} color="#D1E758" />
-            <Text className="text-[#D1E758] text-xs mt-1 font-medium">SAVED</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="items-center flex-1"
-            onPress={() => (navigation as any).navigate('Camera')}
-          >
-            <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center -mt-6">
-              <Ionicons name="scan" size={28} color="#181A2C" />
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center flex-1">
-            <Ionicons name="compass-outline" size={24} color="#9CA3AF" />
-            <Text className="text-gray-400 text-xs mt-1">EXPLORE</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            className="items-center flex-1"
-            onPress={() => (navigation as any).navigate('Settings')}
-          >
-            <Ionicons name="person-outline" size={24} color="#9CA3AF" />
-            <Text className="text-gray-400 text-xs mt-1">PROFILE</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Navigation Bar */}
+      <NavigationBar />
     </View>
   );
 }

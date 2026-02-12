@@ -403,7 +403,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Account Actions */}
-        <View className="bg-white mx-6 rounded-2xl mb-24 overflow-hidden">
+        <View className="bg-white mx-6 rounded-2xl mb-32 overflow-hidden">
           <View className="p-4 border-b border-gray-100">
             <Text className="text-gray-900 text-lg font-semibold">ACCOUNT</Text>
           </View>

@@ -14,7 +14,7 @@ export const NavigationBar = () => {
     const isActive = (routeName: string) => route.name === routeName;
 
     return (
-        <View className="absolute bottom-0 left-0 right-0 border-t mx-4 mb-4 rounded-t-3xl bg-[#181A2C]" style={{
+        <View className="absolute bottom-4 left-4 right-4 rounded-3xl bg-[#181A2C]" style={{
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
@@ -32,10 +32,10 @@ export const NavigationBar = () => {
           
           <TouchableOpacity 
             className="items-center flex-1"
-            onPress={() => (navigation as any).navigate('SavedItems')}
+            onPress={() => (navigation as any).navigate('Search')}
           >
-            <Ionicons name="time-outline" size={24} color={isActive('SavedItems') ? "#D1E758" : "#9CA3AF"} />
-            <Text className={`text-xs mt-1 ${isActive('SavedItems') ? 'text-[#D1E758]' : 'text-gray-400'}`} style={getFontStyle('regular', 12)}>History</Text>
+            <Ionicons name="search-outline" size={24} color={isActive('Search') ? "#D1E758" : "#9CA3AF"} />
+            <Text className={`text-xs mt-1 ${isActive('Search') ? 'text-[#D1E758]' : 'text-gray-400'}`} style={getFontStyle('regular', 12)}>Explore</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -51,7 +51,7 @@ export const NavigationBar = () => {
             className="items-center flex-1"
             onPress={() => (navigation as any).navigate('SavedItems')}
           >
-            <Ionicons name="heart-outline" size={24} color={isActive('SavedItems') ? "#D1E758" : "#9CA3AF"} />
+            <Ionicons name="bookmark-outline" size={24} color={isActive('SavedItems') ? "#D1E758" : "#9CA3AF"} />
             <Text className={`text-xs mt-1 ${isActive('SavedItems') ? 'text-[#D1E758]' : 'text-gray-400'}`} style={getFontStyle('regular', 12)}>Saved</Text>
           </TouchableOpacity>
           

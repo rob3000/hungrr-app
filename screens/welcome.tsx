@@ -86,7 +86,7 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Bottom Actions */}
-        <View className="px-6 pb-8">
+        <View className="px-6 pb-12">
           {/* Get Started Button */}
           <TouchableOpacity
             className="bg-[#181A2C] rounded-3xl py-4 items-center mb-4 flex-row justify-center"
@@ -98,10 +98,10 @@ export default function WelcomeScreen() {
 
           {/* Login Link */}
           <TouchableOpacity 
-            className="items-center flex-row justify-center"
+            className="items-center py-3"
             onPress={() => (navigation as any).navigate('Login')}
           >
-            <Text className="text-[#181A2C] text-base">I already have an account</Text>
+            <Text className="text-[#181A2C] text-base font-medium">I already have an account</Text>
           </TouchableOpacity>
         </View>
       </View>
