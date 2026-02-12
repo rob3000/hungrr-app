@@ -20,6 +20,7 @@ import Checkout from '../screens/checkout';
 import WelcomeToPro from '../screens/welcome-to-pro';
 import Search from '../screens/search';
 import { BackButton } from '../components/BackButton';
+import { CustomHeader } from '../components/CustomHeader';
 
 const Stack = createStackNavigator({
   screens: {
@@ -56,9 +57,20 @@ const Stack = createStackNavigator({
     },
     DietaryProfile: {
       screen: DietaryProfile,
-      options: {
-        headerShown: false,
-        gestureEnabled: false,
+      options: ({ navigation, route }) => {
+        const isFromSettings = route.params?.fromSettings;
+        return isFromSettings ? {
+          header: () => (
+            <CustomHeader 
+              title="Dietary Profile" 
+              onBackPress={navigation.goBack}
+              showBackButton={true}
+            />
+          ),
+        } : {
+          headerShown: false,
+          gestureEnabled: false,
+        };
       },
     },
     Overview: {
@@ -114,18 +126,24 @@ const Stack = createStackNavigator({
     Details: {
       screen: Details,
       options: ({ navigation }) => ({
-        headerLeft: () => <BackButton onPress={navigation.goBack} />,
+        header: () => (
+          <CustomHeader 
+            onBackPress={navigation.goBack}
+            showBackButton={true}
+          />
+        ),
       }),
     },
     Settings: {
       screen: Settings,
       options: ({ navigation }) => ({
-        headerLeft: () => <BackButton onPress={navigation.goBack} />,
-        headerStyle: {
-          backgroundColor: '#FFFFFF',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
+        header: () => (
+          <CustomHeader 
+            title="Settings" 
+            onBackPress={navigation.goBack}
+            showBackButton={true}
+          />
+        ),
       }),
     },
     Checkout: {

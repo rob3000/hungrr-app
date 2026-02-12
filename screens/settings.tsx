@@ -10,6 +10,7 @@ import EditProfileModal from '../components/EditProfileModal';
 import SubscriptionModal from '../components/SubscriptionModal';
 import { NavigationBar } from '../components/NavigationBar';
 import { UserProfile } from '../context/AuthContext';
+import { handleAPIResponse, isTokenExpiredError } from '../utils/api-helpers';
 
 interface UserPreferences {
   darkMode: boolean;
@@ -35,7 +36,7 @@ interface SafeFoodItem {
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { logout, user, updateUser } = useAuth();
+  const { logout, user, updateUser, darkMode, toggleDarkMode } = useAuth();
   const { isPro } = useSubscription();
   const [pushAlerts, setPushAlerts] = useState(true);
   const [highSensitivityWarnings, setHighSensitivityWarnings] = useState(false);
@@ -104,12 +105,16 @@ export default function SettingsScreen() {
       await storage.setItem(STORAGE_KEYS.USER_PREFERENCES, newPreferences);
 
       // Sync with API
-      try {
-        await apiClient.updatePreferences(newPreferences);
-      } catch (apiError) {
-        console.error('Error syncing preferences with API:', apiError);
-        // Continue even if API sync fails - local storage is updated
-      }
+      const response = await apiClient.updatePreferences(newPreferences);
+      handleAPIResponse(response, {
+        onError: (error) => {
+          if (!isTokenExpiredError(error)) {
+            console.error('Error syncing preferences with API:', error);
+            // Continue even if API sync fails - local storage is updated
+          }
+        },
+        logContext: 'Preferences sync'
+      });
     } catch (error) {
       console.error('Error saving preferences:', error);
       Alert.alert('Error', 'Failed to save preferences. Please try again.');
@@ -166,7 +171,7 @@ export default function SettingsScreen() {
   };
 
   const handleDarkModeToggle = async () => {
-    // Dark mode functionality removed for now
+    toggleDarkMode();
   };
 
   // Use actual user data from AuthContext
@@ -220,10 +225,22 @@ export default function SettingsScreen() {
   const handleSaveProfile = async (updatedFields: Partial<UserProfile>) => {
     try {
       // Call API to update profile
-      await apiClient.updateProfile(updatedFields);
+      const response = await apiClient.updateProfile(updatedFields);
+      
+      const success = handleAPIResponse(response, {
+        onError: (error) => {
+          if (!isTokenExpiredError(error)) {
+            console.error('Error updating profile:', error);
+            throw new Error(error.message || 'Failed to update profile');
+          }
+        },
+        logContext: 'Profile update'
+      });
 
-      // Update AuthContext with new user data
-      await updateUser(updatedFields);
+      if (success) {
+        // Update AuthContext with new user data
+        await updateUser(updatedFields);
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
@@ -231,10 +248,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className={`flex-1 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="bg-white pt-12 pb-6 px-6">
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} pb-6 px-6`}>
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-gray-400 text-sm font-medium tracking-wider uppercase">
               User Dashboard
@@ -252,7 +269,7 @@ export default function SettingsScreen() {
           {/* Profile Info */}
           <View className="mb-4">
             <Text className="text-gray-400 text-xs font-medium mb-1">PROFILE NAME</Text>
-            <Text className="text-gray-900 text-2xl font-bold">{userData.name}</Text>
+            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-2xl font-bold`}>{userData.name}</Text>
             <Text className="text-gray-500 text-sm mt-1">
               Member since {userData.memberSince} • {userData.version}
             </Text>
@@ -260,10 +277,12 @@ export default function SettingsScreen() {
         </View>
 
         {/* Active Restrictions */}
-        <View className="bg-white mx-6 rounded-2xl mb-6 overflow-hidden">
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
-            <Text className="text-gray-900 text-lg font-semibold">ACTIVE RESTRICTIONS</Text>
-            <Text className="text-gray-400 text-sm">{getSelectedRestrictionsCount()} SELECTED</Text>
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} mx-6 rounded-2xl mb-6 overflow-hidden`}>
+          <View className={`flex-row items-center justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>ACTIVE RESTRICTIONS</Text>
+            <TouchableOpacity onPress={() => (navigation as any).navigate('DietaryProfile', { fromSettings: true })}>
+              <Text className="text-[#D1E758] text-sm font-semibold">EDIT</Text>
+            </TouchableOpacity>
           </View>
           
           <View className="p-4 space-y-3">
@@ -273,14 +292,14 @@ export default function SettingsScreen() {
                   restriction.enabled 
                     ? restriction.priority 
                       ? 'bg-lime-400' 
-                      : 'bg-gray-100'
-                    : 'bg-gray-50'
+                      : darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    : darkMode ? 'bg-gray-800' : 'bg-gray-50'
                 }`}>
                   <Text className={`font-medium ${
                     restriction.enabled 
                       ? restriction.priority 
                         ? 'text-gray-900' 
-                        : 'text-gray-700'
+                        : darkMode ? 'text-white' : 'text-gray-700'
                       : 'text-gray-400'
                   }`}>
                     {restriction.name}
@@ -298,7 +317,7 @@ export default function SettingsScreen() {
                   <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
                     restriction.enabled 
                       ? 'bg-gray-900 border-gray-900' 
-                      : 'border-gray-300'
+                      : darkMode ? 'border-gray-600' : 'border-gray-300'
                   }`}>
                     {restriction.enabled && (
                       <Ionicons name="checkmark" size={12} color="white" />
@@ -309,7 +328,7 @@ export default function SettingsScreen() {
             ))}
             
             <TouchableOpacity 
-              className="flex-row items-center justify-center p-3 border border-dashed border-gray-300 rounded-xl"
+              className={`flex-row items-center justify-center p-3 border border-dashed ${darkMode ? 'border-gray-600' : 'border-gray-300'} rounded-xl`}
               onPress={addCustomRestriction}
             >
               <Ionicons name="add" size={16} color="#9CA3AF" />
@@ -319,7 +338,7 @@ export default function SettingsScreen() {
 
           {/* Priority Notice */}
           {getPriorityRestriction() && (
-            <View className="bg-gray-900 p-4 m-4 rounded-xl">
+            <View className={`${darkMode ? 'bg-gray-700' : 'bg-gray-900'} p-4 m-4 rounded-xl`}>
               <View className="flex-row items-start">
                 <View className="w-5 h-5 bg-yellow-400 rounded-full items-center justify-center mr-3 mt-0.5">
                   <Text className="text-gray-900 text-xs font-bold">!</Text>
@@ -336,18 +355,33 @@ export default function SettingsScreen() {
         </View>
 
         {/* Notification Settings */}
-        <View className="bg-white mx-6 rounded-2xl mb-6 overflow-hidden">
-          <View className="p-4 border-b border-gray-100">
-            <Text className="text-gray-900 text-lg font-semibold">NOTIFICATION SETTINGS</Text>
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} mx-6 rounded-2xl mb-6 overflow-hidden`}>
+          <View className={`p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>NOTIFICATION SETTINGS</Text>
           </View>
           
           <View className="p-4 space-y-4">
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center mr-3">
+                <View className={`w-8 h-8 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full items-center justify-center mr-3`}>
+                  <Ionicons name="moon" size={16} color={darkMode ? "#D1E758" : "#6B7280"} />
+                </View>
+                <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>Dark Mode</Text>
+              </View>
+              <Switch
+                value={darkMode}
+                onValueChange={handleDarkModeToggle}
+                trackColor={{ false: '#E5E7EB', true: '#D1E758' }}
+                thumbColor={darkMode ? '#374151' : '#9CA3AF'}
+              />
+            </View>
+            
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <View className={`w-8 h-8 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full items-center justify-center mr-3`}>
                   <Ionicons name="notifications" size={16} color="#6B7280" />
                 </View>
-                <Text className="text-gray-900 font-medium">Push Alerts</Text>
+                <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>Push Alerts</Text>
               </View>
               <Switch
                 value={pushAlerts}
@@ -359,10 +393,10 @@ export default function SettingsScreen() {
             
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center mr-3">
+                <View className={`w-8 h-8 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full items-center justify-center mr-3`}>
                   <Ionicons name="warning" size={16} color="#6B7280" />
                 </View>
-                <Text className="text-gray-900 font-medium">High Sensitivity Warnings</Text>
+                <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>High Sensitivity Warnings</Text>
               </View>
               <Switch
                 value={highSensitivityWarnings}
@@ -375,9 +409,9 @@ export default function SettingsScreen() {
         </View>
 
         {/* Safe Foods History */}
-        <View className="bg-white mx-6 rounded-2xl mb-6 overflow-hidden">
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
-            <Text className="text-gray-900 text-lg font-semibold">SAFE FOODS HISTORY</Text>
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} mx-6 rounded-2xl mb-6 overflow-hidden`}>
+          <View className={`flex-row items-center justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>SAFE FOODS HISTORY</Text>
             <TouchableOpacity onPress={clearSafeFoodsHistory}>
               <Text className="text-gray-400 text-sm">CLEAR LOGS</Text>
             </TouchableOpacity>
@@ -387,7 +421,7 @@ export default function SettingsScreen() {
             {safeFoods.map((food) => (
               <View key={food.id} className="flex-row items-center justify-between">
                 <View className="flex-1">
-                  <Text className="text-gray-900 font-medium">{food.name}</Text>
+                  <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{food.name}</Text>
                   <Text className="text-gray-500 text-sm">{food.brand} • {food.tags.join(', ')}</Text>
                 </View>
                 <View className="w-6 h-6 bg-lime-400 rounded-full items-center justify-center">
@@ -397,40 +431,40 @@ export default function SettingsScreen() {
             ))}
           </View>
           
-          <TouchableOpacity className="p-4 border-t border-gray-100">
+          <TouchableOpacity className={`p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
             <Text className="text-center text-gray-400 text-sm">VIEW COMPLETE DATA LOG</Text>
           </TouchableOpacity>
         </View>
 
         {/* Account Actions */}
-        <View className="bg-white mx-6 rounded-2xl mb-32 overflow-hidden">
-          <View className="p-4 border-b border-gray-100">
-            <Text className="text-gray-900 text-lg font-semibold">ACCOUNT</Text>
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} mx-6 rounded-2xl mb-32 overflow-hidden`}>
+          <View className={`p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>ACCOUNT</Text>
           </View>
           
           <TouchableOpacity 
-            className="flex-row items-center justify-between p-4 border-b border-gray-100"
+            className={`flex-row items-center justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}
             onPress={handleEditProfile}
           >
             <View className="flex-row items-center">
-              <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center mr-3">
+              <View className={`w-8 h-8 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full items-center justify-center mr-3`}>
                 <Ionicons name="person-outline" size={16} color="#6B7280" />
               </View>
-              <Text className="text-gray-900 font-medium">Edit Profile</Text>
+              <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>Edit Profile</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
           </TouchableOpacity>
 
           {!isPro && (
             <TouchableOpacity 
-              className="flex-row items-center justify-between p-4 border-b border-gray-100"
+              className={`flex-row items-center justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}
               onPress={() => setIsSubscriptionModalVisible(true)}
             >
               <View className="flex-row items-center">
                 <View className="w-8 h-8 bg-yellow-100 rounded-full items-center justify-center mr-3">
                   <Ionicons name="star" size={16} color="#F59E0B" />
                 </View>
-                <Text className="text-gray-900 font-medium">Upgrade to Premium</Text>
+                <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>Upgrade to Premium</Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
             </TouchableOpacity>

@@ -8,6 +8,7 @@ import ScanLimiterService from '../services/scan-limiter';
 import { apiClient, Product } from '../services/api';
 import { NavigationBar } from 'components/NavigationBar';
 import { Header } from 'components/Header';
+import { handleAPIResponse, isTokenExpiredError } from '../utils/api-helpers';
 
 interface DashboardDataResponse {
   recentScans: Product[];
@@ -18,7 +19,7 @@ interface DashboardDataResponse {
 
 export default function Overview() {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, darkMode } = useAuth();
   const { isPro } = useSubscription();
   const [scansRemaining, setScansRemaining] = useState<number>(10);
   const [recentScans, setRecentScans] = useState<Product[]>([]);
@@ -35,24 +36,33 @@ export default function Overview() {
         // Fetch dashboard data from API
         const response = await apiClient.getDashboard();
 
-        if (response.success && response.data) {
-          const { recent_scans: apiRecentScans, scans_today: scansToday, is_pro: apiIsPro } = response.data;
-          console.log(response.data)
-          // Update recent scans
-          setRecentScans(apiRecentScans);
+        const success = handleAPIResponse(response, {
+          onSuccess: (data) => {
+            const { recent_scans: apiRecentScans, scans_today: scansToday, is_pro: apiIsPro } = data;
+            console.log(data);
+            
+            // Update recent scans
+            setRecentScans(apiRecentScans);
 
-          // Update scans remaining for free users
-          if (!apiIsPro) {
-            const dailyLimit = ScanLimiterService.getDailyLimit();
-            const remaining = Math.max(0, dailyLimit - scansToday);
-            setScansRemaining(remaining);
-          }
-        } else {
-          // API error - fall back to local data
-          console.warn('Failed to fetch dashboard data:', response.error);
-          setError(response.error?.message || 'Failed to load dashboard data');
-          
-          // Load scans remaining from local storage as fallback
+            // Update scans remaining for free users
+            if (!apiIsPro) {
+              const dailyLimit = ScanLimiterService.getDailyLimit();
+              const remaining = Math.max(0, dailyLimit - scansToday);
+              setScansRemaining(remaining);
+            }
+          },
+          onError: (error) => {
+            // Don't show error for token expiration as logout will handle it
+            if (!isTokenExpiredError(error)) {
+              console.warn('Failed to fetch dashboard data:', error);
+              setError(error.message || 'Failed to load dashboard data');
+            }
+          },
+          logContext: 'Dashboard data fetch'
+        });
+
+        // Load fallback data if API call failed (but not for token expiration)
+        if (!success && !isTokenExpiredError(response.error)) {
           if (!isPro) {
             const remaining = await ScanLimiterService.getScansRemaining();
             setScansRemaining(remaining);
@@ -87,11 +97,11 @@ export default function Overview() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className={`flex-1 ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {isLoading ? (
-        <View className="flex-1 items-center justify-center bg-white">
-          <ActivityIndicator size="large" color="#181A2C" />
-          <Text className="text-gray-700 mt-4">Loading dashboard...</Text>
+        <View className={`flex-1 items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
+          <ActivityIndicator size="large" color={darkMode ? "#D1E758" : "#181A2C"} />
+          <Text className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} mt-4`}>Loading dashboard...</Text>
         </View>
       ) : (
         <ScrollView className="flex-1">
@@ -102,13 +112,13 @@ export default function Overview() {
 
             {/* Main heading */}
             <View className="mb-6">
-              <Text className="text-3xl font-bold text-black mb-2">What are you</Text>
+              <Text className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-black'}`}>What are you</Text>
               <Text className="text-3xl font-bold text-gray-400">eating today?</Text>
             </View>
 
             {/* Search Bar */}
             <TouchableOpacity 
-              className="bg-gray-100 rounded-2xl px-4 py-4 flex-row items-center mb-6"
+              className={`${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-2xl px-4 py-4 flex-row items-center mb-6`}
               onPress={() => (navigation as any).navigate('Search')}
             >
               <Ionicons name="search" size={20} color="#9CA3AF" />
@@ -118,8 +128,8 @@ export default function Overview() {
 
           {/* Scan Label Card */}
           <View className="mx-6 mb-8">
-            <View className="bg-gradient-to-br from-slate-700 to-slate-900 rounded-3xl p-8 items-center" style={{
-              backgroundColor: '#181A2C',
+            <View className={`${darkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-slate-700 to-slate-900'} rounded-3xl p-8 items-center`} style={{
+              backgroundColor: darkMode ? '#374151' : '#181A2C',
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
@@ -134,7 +144,7 @@ export default function Overview() {
               </TouchableOpacity>
               
               <Text className="text-white text-xl font-bold mb-3">Scan Label</Text>
-              <Text className="text-gray-300 text-center text-sm leading-5">
+              <Text className={`${darkMode ? 'text-gray-400' : 'text-gray-300'} text-center text-sm leading-5`}>
                 Point your camera at{'\n'}ingredients to check{'\n'}compatibility.
               </Text>
             </View>
@@ -144,7 +154,7 @@ export default function Overview() {
           {recentScans.length > 0 && (
             <View className="mx-6 mb-6">
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-bold text-black">Recent Scans</Text>
+                <Text className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-black'}`}>Recent Scans</Text>
                 <TouchableOpacity onPress={() => (navigation as any).navigate('SavedItems')}>
                   <Text className="text-sm font-semibold text-blue-600">VIEW ALL</Text>
                 </TouchableOpacity>
@@ -156,7 +166,7 @@ export default function Overview() {
                 return (
                   <TouchableOpacity
                     key={product.id}
-                    className="bg-white rounded-2xl p-4 mb-3 flex-row items-center border border-gray-100"
+                    className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-4 mb-3 flex-row items-center border`}
                     style={{
                       shadowColor: '#000',
                       shadowOffset: { width: 0, height: 1 },
@@ -166,7 +176,7 @@ export default function Overview() {
                     }}
                     onPress={() => (navigation as any).navigate('ProductDetail', { barcode: product.barcode })}
                   >
-                    <View className="w-12 h-12 rounded-xl bg-gray-100 mr-4 overflow-hidden">
+                    <View className={`w-12 h-12 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} mr-4 overflow-hidden`}>
                       {product.images && product.images.length > 0 ? (
                         <Image
                           source={{ uri: product.images[0] }}
@@ -180,7 +190,7 @@ export default function Overview() {
                       )}
                     </View>
                     <View className="flex-1">
-                      <Text className="text-black font-semibold mb-1">{product.name}</Text>
+                      <Text className={`${darkMode ? 'text-white' : 'text-black'} font-semibold mb-1`}>{product.name}</Text>
                       <Text className="text-gray-500 text-sm">Scanned 2m ago</Text>
                     </View>
                     <View className={`px-3 py-1.5 rounded-full flex-row items-center ${safetyColors.bg}`}>
@@ -198,11 +208,11 @@ export default function Overview() {
           {/* Error State - Show fallback data */}
           {error && !isLoading && recentScans.length === 0 && (
             <View className="mx-6 mb-6">
-              <View className="bg-yellow-50 rounded-2xl p-4 flex-row items-start">
+              <View className={`${darkMode ? 'bg-yellow-900/20' : 'bg-yellow-50'} rounded-2xl p-4 flex-row items-start`}>
                 <Ionicons name="alert-circle" size={24} color="#F59E0B" />
                 <View className="ml-3 flex-1">
-                  <Text className="text-yellow-800 font-semibold mb-1">Using Offline Mode</Text>
-                  <Text className="text-yellow-700 text-sm">
+                  <Text className={`${darkMode ? 'text-yellow-300' : 'text-yellow-800'} font-semibold mb-1`}>Using Offline Mode</Text>
+                  <Text className={`${darkMode ? 'text-yellow-400' : 'text-yellow-700'} text-sm`}>
                     We couldn't load your latest data. You can still scan products and they'll sync when you're back online.
                   </Text>
                 </View>

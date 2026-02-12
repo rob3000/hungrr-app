@@ -6,6 +6,8 @@ import { apiClient, Product } from '../services/api';
 import { useSavedItems } from '../context/SavedItemsContext';
 import SubscriptionModal from '../components/SubscriptionModal';
 import IngredientDetailModal from '../components/IngredientDetailModal';
+import { NavigationBar } from 'components/NavigationBar';
+import { handleAPIResponse, isTokenExpiredError } from '../utils/api-helpers';
 
 // Safety level colors
 const SAFETY_COLORS = {
@@ -47,14 +49,25 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<null | Product>(productParam)
   console.info('THE PRODUCT!', product, barcode)
 
-  // If we have a barcode, we shold fetch the data.
+  // If we have a barcode, we should fetch the data.
   useEffect(() => {
-    apiClient.scanProduct(barcode).then((result) => {
-      if (result.data) {
-        setProduct(result.data.product)
-      }
-    });
-  }, [])
+    if (barcode) {
+      apiClient.scanProduct(barcode).then((response) => {
+        handleAPIResponse(response, {
+          onSuccess: (data) => {
+            setProduct(data.product);
+          },
+          onError: (error) => {
+            if (!isTokenExpiredError(error)) {
+              console.error('Error fetching product:', error);
+              Alert.alert('Error', 'Failed to load product details. Please try again.');
+            }
+          },
+          logContext: 'Product detail fetch'
+        });
+      });
+    }
+  }, [barcode]);
 
   const handleSaveProduct = async () => {
     if (!product) return;
@@ -245,40 +258,7 @@ export default function ProductDetailScreen() {
         </View>
 
         {/* Bottom Navigation */}
-        <View className="bg-white mx-4 mb-4 rounded-3xl" style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
-        }}>
-          <View className="flex-row items-center justify-around py-4 px-6">
-            <TouchableOpacity 
-              className="items-center flex-1"
-              onPress={() => (navigation as any).navigate('Overview')}
-            >
-              <Ionicons name="home-outline" size={24} color="#9CA3AF" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity className="items-center flex-1">
-              <Ionicons name="time-outline" size={24} color="#9CA3AF" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity className="items-center flex-1">
-              <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center -mt-6">
-                <Ionicons name="barcode-outline" size={24} color="#181A2C" />
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity className="items-center flex-1">
-              <Ionicons name="bookmark-outline" size={24} color="#9CA3AF" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity className="items-center flex-1">
-              <Ionicons name="person-outline" size={24} color="#9CA3AF" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <NavigationBar />
       </View>
     );
   }

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { apiClient } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface DietaryRestriction {
   id: string;
@@ -56,6 +57,8 @@ const DIETARY_OPTIONS: DietaryRestriction[] = [
 
 export default function DietaryProfileScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { darkMode } = useAuth();
   const [selectedRestrictions, setSelectedRestrictions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -67,6 +70,9 @@ export default function DietaryProfileScreen() {
     sorbitol: 0.5,
     mannitol: 0.5,
   });
+
+  // Check if we came from settings (to determine navigation behavior)
+  const isFromSettings = route.params?.fromSettings || false;
 
   const toggleRestriction = (id: string) => {
     setSelectedRestrictions(prev =>
@@ -83,18 +89,26 @@ export default function DietaryProfileScreen() {
         fodmapLevels: selectedRestrictions.includes('low_fodmap') ? fodmapLevels : undefined,
       });
 
-      // Navigate to overview
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Overview' }],
-      });
+      // Navigate based on where we came from
+      if (isFromSettings) {
+        navigation.goBack();
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Overview' }],
+        });
+      }
     } catch (error) {
       console.error('Error saving dietary profile:', error);
       // Still navigate even if save fails - can update later
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Overview' }],
-      });
+      if (isFromSettings) {
+        navigation.goBack();
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Overview' }],
+        });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -115,10 +129,14 @@ export default function DietaryProfileScreen() {
   };
 
   const handleSkip = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Overview' }],
-    });
+    if (isFromSettings) {
+      navigation.goBack();
+    } else {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Overview' }],
+      });
+    }
   };
 
   const filteredOptions = DIETARY_OPTIONS.filter(option =>
@@ -130,37 +148,66 @@ export default function DietaryProfileScreen() {
   const medical = filteredOptions.filter(o => o.category === 'medical');
 
   return (
-    <View className="flex-1 bg-[#f3eee5]">
-      {/* Header */}
-      <View className="bg-white pt-12 pb-4 px-6">
-        <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-2xl font-bold text-gray-900">Dietary Profile</Text>
-          <TouchableOpacity onPress={handleSkip} disabled={isSaving}>
-            <Text className="text-[#2d5f4f] font-semibold">Skip</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <Text className="text-gray-600 mb-4">
-          Select any ingredients you need to avoid. We'll warn you when we spot them in scanned products.
-        </Text>
-
-        {/* Search Bar */}
-        <View className="bg-gray-100 rounded-2xl px-4 py-3 flex-row items-center">
-          <Ionicons name="search" size={20} color="#9CA3AF" />
-          <TextInput
-            className="flex-1 ml-2 text-gray-900"
-            placeholder="Search specific ingredients (e.g. Citric Acid)"
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+    <View className={`flex-1 ${darkMode ? 'bg-gray-900' : 'bg-[#f3eee5]'}`}>
+      {/* Header - only show when not from settings */}
+      {!isFromSettings && (
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} pt-12 pb-4 px-6`}>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Dietary Profile
+            </Text>
+            <TouchableOpacity onPress={handleSkip} disabled={isSaving}>
+              <Text className="text-[#2d5f4f] font-semibold">Skip</Text>
             </TouchableOpacity>
-          )}
+          </View>
+          
+          <Text className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+            Select any ingredients you need to avoid. We'll warn you when we spot them in scanned products.
+          </Text>
+
+          {/* Search Bar */}
+          <View className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-2xl px-4 py-3 flex-row items-center`}>
+            <Ionicons name="search" size={20} color="#9CA3AF" />
+            <TextInput
+              className={`flex-1 ml-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}
+              placeholder="Search specific ingredients (e.g. Citric Acid)"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
+      )}
+
+      {/* Search Bar for settings mode */}
+      {isFromSettings && (
+        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} pb-4 px-6`}>
+          <Text className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+            Select any ingredients you need to avoid. We'll warn you when we spot them in scanned products.
+          </Text>
+          
+          <View className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-2xl px-4 py-3 flex-row items-center`}>
+            <Ionicons name="search" size={20} color="#9CA3AF" />
+            <TextInput
+              className={`flex-1 ml-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}
+              placeholder="Search specific ingredients (e.g. Citric Acid)"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
 
       <ScrollView className="flex-1 px-6 pt-4">
         {/* Common Allergies */}
@@ -168,7 +215,7 @@ export default function DietaryProfileScreen() {
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
               <Ionicons name="warning" size={18} color="#EF4444" />
-              <Text className="text-lg font-bold text-gray-900 ml-2">Common Allergies</Text>
+              <Text className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'} ml-2`}>Common Allergies</Text>
             </View>
             <View className="flex-row flex-wrap">
               {allergies.map(option => {
@@ -208,7 +255,7 @@ export default function DietaryProfileScreen() {
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
               <Ionicons name="leaf" size={18} color="#10B981" />
-              <Text className="text-lg font-bold text-gray-900 ml-2">Diets & Lifestyle</Text>
+              <Text className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'} ml-2`}>Diets & Lifestyle</Text>
             </View>
             <View className="flex-row flex-wrap">
               {diets.map(option => {
@@ -248,7 +295,7 @@ export default function DietaryProfileScreen() {
           <View className="mb-6">
             <View className="flex-row items-center mb-3">
               <Ionicons name="medical" size={18} color="#3B82F6" />
-              <Text className="text-lg font-bold text-gray-900 ml-2">Medical Diets</Text>
+              <Text className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'} ml-2`}>Medical Diets</Text>
             </View>
             <View className="flex-row flex-wrap">
               {medical.map(option => {
@@ -301,7 +348,7 @@ export default function DietaryProfileScreen() {
               return (
                 <View key={fodmap.id} className="mb-4">
                   <View className="flex-row justify-between items-center mb-2">
-                    <Text className="text-base font-medium text-gray-900">{fodmap.label}</Text>
+                    <Text className={`text-base font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{fodmap.label}</Text>
                     <Text className="text-xs font-bold" style={{ color }}>
                       {label}
                     </Text>
@@ -332,9 +379,9 @@ export default function DietaryProfileScreen() {
         )}
 
         {/* Info Box */}
-        <View className="bg-blue-50 rounded-2xl p-4 mb-6 flex-row">
+        <View className={`${darkMode ? 'bg-blue-900/20' : 'bg-blue-50'} rounded-2xl p-4 mb-6 flex-row`}>
           <Ionicons name="information-circle" size={24} color="#3B82F6" />
-          <Text className="text-blue-800 text-sm ml-3 flex-1">
+          <Text className={`${darkMode ? 'text-blue-300' : 'text-blue-800'} text-sm ml-3 flex-1`}>
             You can always update your dietary preferences later in Settings
           </Text>
         </View>
@@ -344,7 +391,7 @@ export default function DietaryProfileScreen() {
       </ScrollView>
 
       {/* Save Button */}
-      <View className="bg-white border-t border-gray-200 px-6 py-4">
+      <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} px-6 py-4`}>
         <TouchableOpacity
           className={`rounded-2xl py-4 items-center ${
             isSaving ? 'bg-gray-400' : 'bg-[#2d5f4f]'
@@ -356,7 +403,7 @@ export default function DietaryProfileScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text className="text-white font-semibold text-lg">
-              {selectedRestrictions.length > 0 ? 'Save Profile' : 'Continue Without Restrictions'}
+              {selectedRestrictions.length > 0 ? (isFromSettings ? 'Update Profile' : 'Save Profile') : 'Continue Without Restrictions'}
             </Text>
           )}
         </TouchableOpacity>

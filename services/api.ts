@@ -228,8 +228,8 @@ class APIClient {
 
   private async handleResponse<T>(response: Response): Promise<APIResponse<T>> {
     // Check for token expiration (401 Unauthorized)
-    if (response.status === 401 && this.token) {
-      logger.warn('Token expired, triggering logout');
+    if (response.status === 401) {
+      logger.warn('Received 401 Unauthorized, triggering logout');
       if (this.onTokenExpired) {
         this.onTokenExpired();
       }

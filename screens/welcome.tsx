@@ -1,10 +1,60 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { storage, STORAGE_KEYS } from '../services/storage';
+import { useAuth } from '../context/AuthContext';
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
+  const { isLoggedIn } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
+
+  // Check if user should skip welcome screen
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkWelcomeStatus = async () => {
+        try {
+          // If user is already logged in, go to overview
+          if (isLoggedIn) {
+            (navigation as any).navigate('Overview');
+            return;
+          }
+
+          // Check if user has seen welcome screen before
+          const hasSeenWelcome = await storage.getItem<boolean>(STORAGE_KEYS.WELCOME_SCREEN_SEEN);
+          
+          if (hasSeenWelcome) {
+            // Skip welcome screen and go directly to login
+            (navigation as any).navigate('Login');
+            return;
+          }
+          
+          setIsChecking(false);
+        } catch (error) {
+          console.error('Error checking welcome screen status:', error);
+          setIsChecking(false);
+        }
+      };
+
+      checkWelcomeStatus();
+    }, [isLoggedIn, navigation])
+  );
+
+  const handleLoginPress = async () => {
+    // Store that user has seen welcome screen and wants to login
+    await storage.setItem(STORAGE_KEYS.WELCOME_SCREEN_SEEN, true);
+    (navigation as any).navigate('Login');
+  };
+
+  // Show loading while checking
+  if (isChecking) {
+    return (
+      <View className="flex-1 bg-[#D1E758] items-center justify-center">
+        <ActivityIndicator size="large" color="#181A2C" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-[#D1E758] relative">
@@ -90,7 +140,11 @@ export default function WelcomeScreen() {
           {/* Get Started Button */}
           <TouchableOpacity
             className="bg-[#181A2C] rounded-3xl py-4 items-center mb-4 flex-row justify-center"
-            onPress={() => (navigation as any).navigate('Signup')}
+            onPress={async () => {
+              // Store that user has seen welcome screen
+              await storage.setItem(STORAGE_KEYS.WELCOME_SCREEN_SEEN, true);
+              (navigation as any).navigate('Signup');
+            }}
           >
             <Text className="text-[#D1E758] font-semibold text-lg mr-2">Get Started</Text>
             <Ionicons name="arrow-forward" size={20} color="#D1E758" />
@@ -99,7 +153,7 @@ export default function WelcomeScreen() {
           {/* Login Link */}
           <TouchableOpacity 
             className="items-center py-3"
-            onPress={() => (navigation as any).navigate('Login')}
+            onPress={handleLoginPress}
           >
             <Text className="text-[#181A2C] text-base font-medium">I already have an account</Text>
           </TouchableOpacity>

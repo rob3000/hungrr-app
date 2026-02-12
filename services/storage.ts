@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   SCAN_LIMIT_DATA: 'scan_limit_data',
   USER_PREFERENCES: 'user_preferences',
   PRO_ONBOARDING_COMPLETE: 'pro_onboarding_complete',
+  WELCOME_SCREEN_SEEN: 'welcome_screen_seen',
 } as const;
 
 class StorageService {

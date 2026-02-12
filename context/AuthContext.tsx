@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppState, AppStateStatus, Alert } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { apiClient } from '../services/api';
 import { storage, STORAGE_KEYS } from '../services/storage';
 import { logger } from '../services/logger';
@@ -54,12 +54,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Set up token expiration callback
     apiClient.setTokenExpiredCallback(async () => {
       logger.warn('Token expired via API callback, logging out');
-      await logout();
-      Alert.alert(
-        'Session Expired',
-        'Your session has expired. Please log in again.',
-        [{ text: 'OK' }]
-      );
+      try {
+        await logout();
+      } catch (error) {
+        logger.error('Error during automatic logout:', error);
+        // Force logout even if there's an error
+        setToken(null);
+        setUser(null);
+        setIsLoggedIn(false);
+        apiClient.setToken(null);
+      }
     });
   }, []);
 
@@ -74,11 +78,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!isValid) {
         logger.warn('Token validation failed, logging out');
         await logout();
-        Alert.alert(
-          'Session Expired',
-          'Your session has expired. Please log in again.',
-          [{ text: 'OK' }]
-        );
       }
     };
 
@@ -165,20 +164,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Clear state
+      logger.info('Logging out user');
+      
+      // Clear state first to immediately update UI
       setToken(null);
       setUser(null);
       setIsLoggedIn(false);
 
-      // Clear AsyncStorage
-      await storage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      await storage.removeItem(STORAGE_KEYS.USER_PROFILE);
-
       // Clear token from API client
       apiClient.setToken(null);
+
+      // Clear AsyncStorage
+      await Promise.all([
+        storage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
+        storage.removeItem(STORAGE_KEYS.USER_PROFILE)
+      ]);
+
+      logger.info('Logout completed successfully');
     } catch (error) {
-      console.error('Error during logout:', error);
-      throw error;
+      logger.error('Error during logout:', error);
+      // Even if storage clearing fails, ensure the user is logged out in memory
+      setToken(null);
+      setUser(null);
+      setIsLoggedIn(false);
+      apiClient.setToken(null);
     }
   };
 

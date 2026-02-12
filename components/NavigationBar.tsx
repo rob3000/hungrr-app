@@ -2,10 +2,12 @@ import { View, Text, TouchableOpacity } from "react-native"
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getFontStyle } from '../hooks/useFont';
+import { useAuth } from '../context/AuthContext';
 
 export const NavigationBar = () => {
     const navigation = useNavigation();
     const route = useRoute();
+    const { darkMode } = useAuth();
 
     const handleProfilePress = () => {
         (navigation as any).navigate('Settings');
@@ -14,7 +16,7 @@ export const NavigationBar = () => {
     const isActive = (routeName: string) => route.name === routeName;
 
     return (
-        <View className="absolute bottom-4 left-4 right-4 rounded-3xl bg-[#181A2C]" style={{
+        <View className={`absolute bottom-4 left-4 right-4 rounded-[24px] ${darkMode ? 'bg-gray-800' : 'bg-[#181A2C]'}`} style={{
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
@@ -42,7 +44,7 @@ export const NavigationBar = () => {
             className="items-center flex-1"
             onPress={() => (navigation as any).navigate('Camera')}
           >
-            <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center -mt-6">
+            <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center mb-2">
               <Ionicons name="barcode-outline" size={24} color="#181A2C" />
             </View>
           </TouchableOpacity>

@@ -116,9 +116,16 @@ export default function SignupScreen() {
           </View>
           
           <Text className="text-3xl font-bold text-black mb-2">Create Account</Text>
-          <Text className="text-black/70 text-center text-lg">
+          <Text className="text-black/70 text-center text-lg mb-8">
             Join hungrr to discover IBS-safe foods
           </Text>
+
+          {/* Page Indicators */}
+          <View className="flex-row items-center mb-2">
+            <View className="w-2 h-2 bg-black/30 rounded-full mr-2" />
+            <View className="w-6 h-2 bg-black rounded-full mr-2" />
+            <View className="w-2 h-2 bg-black/30 rounded-full" />
+          </View>
         </View>
 
         {/* Signup Form Card - Floating */}

@@ -193,12 +193,12 @@ export default function LoginScreen() {
         {/* Login Button - Outside the card */}
         <View className="px-6 mb-4">
           <TouchableOpacity
-            className={`rounded-3xl py-4 items-center flex-row justify-center ${isLoading ? 'bg-gray-400' : 'bg-[#181A2C]'}`}
+            className={`rounded-3xl py-4 items-center flex-row justify-center bg-[#181A2C]`}
             onPress={handleSendOTP}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color="#D1E758" />
             ) : (
               <>
                 <Text className="text-[#D1E758] font-semibold text-lg mr-2">Log In</Text>
