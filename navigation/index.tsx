@@ -12,6 +12,7 @@ import Details from '../screens/details';
 import Camera from '../screens/camera';
 import RecipeDetail from '../screens/recipe-detail';
 import ProductDetail from '../screens/product-detail';
+import IngredientDetail from '../screens/ingredient-detail';
 import AddProduct from '../screens/add-product';
 import Settings from '../screens/settings';
 import SavedItems from '../screens/saved-items';
@@ -82,6 +83,12 @@ const Stack = createStackNavigator({
     },
     ProductDetail: {
       screen: ProductDetail,
+      options: {
+        headerShown: false,
+      },
+    },
+    IngredientDetail: {
+      screen: IngredientDetail,
       options: {
         headerShown: false,
       },

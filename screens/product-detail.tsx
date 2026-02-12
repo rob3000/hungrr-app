@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiClient, Product } from '../services/api';
 import { useSavedItems } from '../context/SavedItemsContext';
 import SubscriptionModal from '../components/SubscriptionModal';
+import IngredientDetailModal from '../components/IngredientDetailModal';
 
 // Safety level colors
 const SAFETY_COLORS = {
@@ -37,6 +38,8 @@ export default function ProductDetailScreen() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
+  const [selectedIngredient, setSelectedIngredient] = useState<any>(null);
+  const [isIngredientModalVisible, setIsIngredientModalVisible] = useState(false);
 
   
   const productParam = (route.params as any)?.product as Product;
@@ -79,37 +82,208 @@ export default function ProductDetailScreen() {
     }
   };
 
+  // Sample ingredient data - in a real app this would come from your API
+  const getIngredientDetails = (ingredientName: string) => {
+    const ingredientData: { [key: string]: any } = {
+      'honey': {
+        name: 'Honey',
+        description: 'Sweetener • Natural',
+        safetyRating: 'AVOID',
+        tags: ['High Fructose', 'Carbohydrate'],
+        whyToAvoid: {
+          description: 'Honey contains excess fructose in relation to glucose. For individuals with IBS or following a Low FODMAP diet, this excess fructose can be difficult to absorb, leading to fermentation in the gut.',
+          symptoms: ['Bloating', 'Gas', 'Abdominal Pain']
+        },
+        fodmapGroup: {
+          name: 'Monosaccharide',
+          icon: '👤'
+        },
+        servingLimit: '1tsp (7g)',
+        alternatives: [
+          {
+            name: 'Maple Syrup',
+            description: 'Pure, authentic maple syrup',
+            recommended: true
+          },
+          {
+            name: 'Stevia',
+            description: 'Zero calorie natural sweetener'
+          },
+          {
+            name: 'Rice Malt Syrup',
+            description: 'Fructose-free sweetener'
+          }
+        ]
+      },
+      'wheat flour': {
+        name: 'Wheat Flour',
+        description: 'Grain • Processed',
+        safetyRating: 'AVOID',
+        tags: ['High Fructan', 'Gluten'],
+        whyToAvoid: {
+          description: 'Wheat flour contains high levels of fructans, which are poorly absorbed in the small intestine and can cause digestive symptoms in sensitive individuals.',
+          symptoms: ['Bloating', 'Gas', 'Cramping', 'Diarrhea']
+        },
+        fodmapGroup: {
+          name: 'Oligosaccharide',
+          icon: '🔗'
+        },
+        servingLimit: 'Avoid',
+        alternatives: [
+          {
+            name: 'Rice Flour',
+            description: 'Gluten-free, low FODMAP alternative',
+            recommended: true
+          },
+          {
+            name: 'Oat Flour',
+            description: 'Made from ground oats'
+          }
+        ]
+      },
+      'soy lecithin': {
+        name: 'Soy Lecithin',
+        description: 'Emulsifier • Processed',
+        safetyRating: 'CAUTION',
+        tags: ['Soy Derivative', 'Additive'],
+        whyToAvoid: {
+          description: 'Soy lecithin may contain small amounts of soy proteins that can trigger reactions in sensitive individuals, though it is generally well tolerated.',
+          symptoms: ['Mild digestive discomfort']
+        },
+        alternatives: [
+          {
+            name: 'Sunflower Lecithin',
+            description: 'Plant-based alternative to soy lecithin',
+            recommended: true
+          }
+        ]
+      }
+    };
+
+    return ingredientData[ingredientName.toLowerCase()] || null;
+  };
+
+  const handleIngredientPress = (ingredientName: string) => {
+    const ingredientDetails = getIngredientDetails(ingredientName);
+    if (ingredientDetails) {
+      setSelectedIngredient(ingredientDetails);
+      setIsIngredientModalVisible(true);
+    }
+  };
+
   if (!product) {
     return (
-      <View className="flex-1 bg-[#f3eee5]">
-        <View className="flex-row items-center justify-between p-4 pt-12 bg-white">
+      <View className="flex-1" style={{ backgroundColor: '#D1E758' }}>
+        {/* Header */}
+        <View className="flex-row items-center justify-between p-4 pt-12" style={{ backgroundColor: '#D1E758' }}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+            className="w-10 h-10 items-center justify-center"
           >
-            <Ionicons name="arrow-back" size={24} color="#374151" />
+            <Ionicons name="arrow-back" size={24} color="#181A2C" />
           </TouchableOpacity>
-          <Text className="text-lg font-semibold text-[#2d5f4f]">Product Details</Text>
+          <Text className="text-lg font-semibold text-[#181A2C]">Scan Result</Text>
           <View className="w-10" />
         </View>
-        <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="text-xl font-bold text-[#2d5f4f] mt-4 text-center">
-            Product Not Found
+
+        {/* Content Card */}
+        <View className="flex-1 px-4 pt-8">
+          <View className="bg-white rounded-3xl p-8 items-center" style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          }}>
+            {/* Search Icon with Question Mark */}
+            <View className="relative mb-8">
+              <View className="w-20 h-20 items-center justify-center">
+                <Ionicons name="search-outline" size={48} color="#9CA3AF" />
+              </View>
+              <View className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#D1E758] rounded-full items-center justify-center">
+                <Text className="text-[#181A2C] font-bold text-lg">?</Text>
+              </View>
+            </View>
+
+            {/* Title */}
+            <Text className="text-2xl font-bold text-[#181A2C] mb-4 text-center">
+              Product Not Found
+            </Text>
+
+            {/* Description */}
+            <Text className="text-gray-600 text-center mb-8 leading-6">
+              We couldn't find this item in our database.{'\n'}
+              You can try scanning the ingredients list{'\n'}
+              directly or search for individual{'\n'}
+              ingredients.
+            </Text>
+
+            {/* Action Buttons */}
+            <View className="w-full space-y-4">
+              <TouchableOpacity 
+                className="bg-[#181A2C] rounded-2xl py-4 items-center flex-row justify-center"
+                onPress={() => (navigation as any).navigate('Camera')}
+              >
+                <Ionicons name="scan-outline" size={20} color="#FFFFFF" className="mr-2" />
+                <Text className="text-white font-semibold text-lg ml-2">Scan Ingredients</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                className="bg-transparent rounded-2xl py-4 items-center flex-row justify-center"
+                onPress={() => (navigation as any).navigate('Search')}
+              >
+                <Ionicons name="search-outline" size={20} color="#181A2C" className="mr-2" />
+                <Text className="text-[#181A2C] font-semibold text-lg ml-2">Search Manually</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Tip */}
+          <Text className="text-center text-[#181A2C] mt-6 opacity-80">
+            Tip: Ensure the barcode is clear and well-lit{'\n'}when scanning.
           </Text>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="bg-[#2d5f4f] rounded-2xl py-3 px-6 mt-6"
-          >
-            <Text className="text-white font-semibold">Go Back</Text>
-          </TouchableOpacity>
+        </View>
+
+        {/* Bottom Navigation */}
+        <View className="bg-white mx-4 mb-4 rounded-3xl" style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 8,
+        }}>
+          <View className="flex-row items-center justify-around py-4 px-6">
+            <TouchableOpacity 
+              className="items-center flex-1"
+              onPress={() => (navigation as any).navigate('Overview')}
+            >
+              <Ionicons name="home-outline" size={24} color="#9CA3AF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity className="items-center flex-1">
+              <Ionicons name="time-outline" size={24} color="#9CA3AF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity className="items-center flex-1">
+              <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center -mt-6">
+                <Ionicons name="barcode-outline" size={24} color="#181A2C" />
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity className="items-center flex-1">
+              <Ionicons name="bookmark-outline" size={24} color="#9CA3AF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity className="items-center flex-1">
+              <Ionicons name="person-outline" size={24} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
   }
 
   const safetyRating = (product.safety_rating?.toUpperCase() ?? 'UNKNOWN') as keyof typeof SAFETY_COLORS;
-  const safetyColor = SAFETY_COLORS[safetyRating];
   const productIsSaved = isSaved(product.id);
 
   return (
@@ -230,12 +404,17 @@ export default function ProductDetailScreen() {
                 return (
                   <Text key={index}>
                     {index > 0 && ', '}
-                    <Text 
-                      className={isProblematic ? 'text-red-600 underline' : 'text-gray-700'}
-                      style={isProblematic ? { textDecorationLine: 'underline' } : {}}
-                    >
-                      {trimmed}
-                    </Text>
+                    {isProblematic ? (
+                      <Text 
+                        className="text-red-600"
+                        style={{ textDecorationLine: 'underline' }}
+                        onPress={() => handleIngredientPress(trimmed)}
+                      >
+                        {trimmed}
+                      </Text>
+                    ) : (
+                      <Text className="text-gray-700">{trimmed}</Text>
+                    )}
                   </Text>
                 );
               })}
@@ -326,6 +505,13 @@ export default function ProductDetailScreen() {
         visible={isSubscriptionModalVisible}
         onClose={() => setIsSubscriptionModalVisible(false)}
         trigger="saved_limit"
+      />
+
+      {/* Ingredient Detail Modal */}
+      <IngredientDetailModal
+        visible={isIngredientModalVisible}
+        onClose={() => setIsIngredientModalVisible(false)}
+        ingredient={selectedIngredient}
       />
     </View>
   );
