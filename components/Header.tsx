@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native"
+import { View, Text, TouchableOpacity, Image } from "react-native"
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,8 +9,7 @@ export const Header = () => {
         <View className="flex-row items-center justify-between mb-8">
             <View className="flex-row items-center">
                 <View className="w-8 h-8 bg-[#D1E758] rounded-lg items-center justify-center mr-3">
-                    <Text className="text-black font-bold text-lg">h</Text>
-                     {/* <Image source={require('../assets/logo-small.png')} width={12} height={12} /> */}
+                    <Image source={require('../assets/logo-small.png')} className="w-5 h-5" resizeMode="contain" />
                 </View>
                 <Text className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-black'}`}>hungrr</Text>
             </View>

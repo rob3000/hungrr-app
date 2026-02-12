@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../services/api';
 import { logger } from '../services/logger';
+import { storage, STORAGE_KEYS } from '../services/storage';
 import DebugPanel from '../components/DebugPanel';
+import { GridBackground } from 'components/GridBackground';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -13,9 +15,27 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [debugTapCount, setDebugTapCount] = useState(0);
+  const [showBackButton, setShowBackButton] = useState(true);
 
   // Enable debug panel in dev mode OR after 5 taps on logo
   const isDebugEnabled = __DEV__ || debugTapCount >= 5;
+
+  // Check if welcome screen was seen to determine if back button should show
+  useEffect(() => {
+    const checkWelcomeStatus = async () => {
+      try {
+        const hasSeenWelcome = await storage.getItem<boolean>(STORAGE_KEYS.WELCOME_SCREEN_SEEN);
+        // If welcome screen was skipped (hasSeenWelcome is true), don't show back button
+        setShowBackButton(!hasSeenWelcome);
+      } catch (error) {
+        console.error('Error checking welcome screen status:', error);
+        // Default to showing back button if we can't determine status
+        setShowBackButton(true);
+      }
+    };
+
+    checkWelcomeStatus();
+  }, []);
 
   // Email validation function
   const isValidEmail = (email: string): boolean => {
@@ -117,31 +137,40 @@ export default function LoginScreen() {
           <Ionicons name="bug" size={24} color="#FFF" />
         </TouchableOpacity>
       )}
-
+      <GridBackground />
       <ScrollView 
         className="flex-1" 
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Back Button */}
-        <View className="px-6 pt-12">
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Welcome')}
-            className="mb-4"
-            disabled={isLoading}
-          >
-            <Ionicons name="arrow-back" size={24} color="#181A2C" />
-          </TouchableOpacity>
-        </View>
+        {/* Back Button - Only show if welcome screen wasn't skipped */}
+        {showBackButton && (
+          <View className="px-6 pt-12">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Welcome')}
+              className="mb-4"
+              disabled={isLoading}
+            >
+              <Ionicons name="arrow-back" size={24} color="#181A2C" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Header */}
-        <View className="items-center px-6 pb-8">
-          <View className="flex-row items-center mb-12">
+        <View className={`items-center px-6 pb-8 ${!showBackButton ? 'pt-32' : 'pt-16'}`}>
+          <TouchableOpacity
+            onPress={() => {
+              setDebugTapCount(prev => prev + 1);
+              // Reset count after 2 seconds of no taps
+              setTimeout(() => setDebugTapCount(0), 2000);
+            }}
+            className="flex-row items-center mb-16"
+          >
             <View className="w-8 h-8 bg-black rounded-lg items-center justify-center mr-3">
-              <Text className="text-[#D1E758] font-bold text-lg">h</Text>
+              <Image source={require('../assets/logo-dark.png')} className="w-5 h-5" resizeMode="contain" />
             </View>
             <Text className="text-2xl font-bold text-black">hungrr</Text>
-          </View>
+          </TouchableOpacity>
           
           <Text className="text-3xl font-bold text-black mb-2">Welcome Back</Text>
           <Text className="text-black/70 text-center text-lg">
