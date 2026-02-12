@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -231,7 +232,7 @@ export default function OTPVerificationScreen() {
           <View className="items-center pt-16 pb-8">
             <View className="flex-row items-center">
               <View className="w-12 h-12 bg-black rounded-2xl items-center justify-center mr-4">
-                <Text className="text-[#D1E758] font-bold text-xl">h</Text>
+                <Image source={require('../assets/logo-dark.png')} className="w-7 h-7" resizeMode="contain" />
               </View>
               <Text className="text-3xl font-bold text-black">hungrr</Text>
             </View>

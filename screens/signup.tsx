@@ -110,7 +110,7 @@ export default function SignupScreen() {
         <View className="items-center px-6 pb-8">
           <View className="flex-row items-center mb-12">
             <View className="w-8 h-8 bg-black rounded-lg items-center justify-center mr-3">
-              <Text className="text-[#D1E758] font-bold text-lg">h</Text>
+              <Image source={require('../assets/logo-dark.png')} className="w-5 h-5" resizeMode="contain" />
             </View>
             <Text className="text-2xl font-bold text-black">hungrr</Text>
           </View>

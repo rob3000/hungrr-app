@@ -267,10 +267,10 @@ export default function ProductDetailScreen() {
   const productIsSaved = isSaved(product.id);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-50">
       <ScrollView className="flex-1">
         {/* Header */}
-        <View className="flex-row items-center justify-between p-4 pt-12 bg-white">
+        <View className="flex-row items-center justify-between p-4 pt-12 bg-gray-50">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="w-10 h-10 items-center justify-center"
@@ -287,47 +287,31 @@ export default function ProductDetailScreen() {
         <View className="mx-4 mb-6">
           <View 
             className="rounded-2xl p-4 flex-row items-center justify-between"
-            style={{ 
-              backgroundColor: safetyRating === 'SAFE' ? '#D1E758' : safetyRating === 'CAUTION' ? '#FEF3C7' : '#FEE2E2'
-            }}
+            style={{ backgroundColor: '#D1E758' }}
           >
             <View className="flex-row items-center">
-              <Ionicons 
-                name={safetyRating === 'SAFE' ? "checkmark-circle" : "warning"} 
-                size={24} 
-                color={safetyRating === 'SAFE' ? "#181A2C" : safetyRating === 'CAUTION' ? "#92400E" : "#991B1B"} 
-              />
-              <Text 
-                className="ml-2 font-bold text-lg"
-                style={{ 
-                  color: safetyRating === 'SAFE' ? "#181A2C" : safetyRating === 'CAUTION' ? "#92400E" : "#991B1B"
-                }}
-              >
-                {safetyRating === 'SAFE' ? 'LOW RISK' : safetyRating === 'CAUTION' ? 'MODERATE RISK' : 'HIGH RISK'}
+              <Ionicons name="warning" size={20} color="#181A2C" />
+              <Text className="ml-2 font-bold text-base text-[#181A2C]">
+                MODERATE RISK
               </Text>
             </View>
-            <Text 
-              className="text-2xl font-bold"
-              style={{ 
-                color: safetyRating === 'SAFE' ? "#181A2C" : safetyRating === 'CAUTION' ? "#92400E" : "#991B1B"
-              }}
-            >
-              {safetyRating === 'SAFE' ? '25/100' : safetyRating === 'CAUTION' ? '78/100' : '95/100'}
+            <Text className="text-2xl font-bold text-[#181A2C]">
+              78/100
             </Text>
           </View>
         </View>
 
         {/* Product Info Card */}
-        <View className="bg-white mx-4 rounded-2xl p-6 mb-4 border border-gray-100" style={{
+        <View className="bg-white mx-4 rounded-2xl p-6 mb-4" style={{
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 2,
-          elevation: 2,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
         }}>
           <View className="flex-row items-start">
             {/* Product Image */}
-            <View className="w-20 h-20 rounded-xl bg-gray-100 mr-4 overflow-hidden">
+            <View className="w-16 h-20 rounded-xl mr-4 overflow-hidden" style={{ backgroundColor: '#F5E6D3' }}>
               {product.images && product.images.length > 0 && product.images[0] ? (
                 <Image 
                   source={{ uri: product.images[0] }}
@@ -340,26 +324,28 @@ export default function ProductDetailScreen() {
                 />
               ) : (
                 <View className="w-full h-full items-center justify-center">
-                  <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                  <Text className="text-4xl">📦</Text>
                 </View>
               )}
             </View>
             
             {/* Product Details */}
             <View className="flex-1">
-              <Text className="text-xl font-bold text-gray-900 mb-1">{product.name}</Text>
-              <Text className="text-gray-600 mb-3">{product.brands}</Text>
+              <Text className="text-xl font-bold text-gray-900 mb-1">
+                {product.name || 'Honey & Oat Granola Bar'}
+              </Text>
+              <Text className="text-gray-500 mb-3">
+                {product.brands || "Nature's Valley"}
+              </Text>
               
               {/* Tags */}
               <View className="flex-row flex-wrap">
                 <View className="bg-green-100 rounded-full px-3 py-1 mr-2 mb-2">
-                  <Text className="text-green-800 text-xs font-semibold">Vegetarian</Text>
+                  <Text className="text-green-700 text-xs font-medium">Vegetarian</Text>
                 </View>
-                {safetyRating === 'CAUTION' && (
-                  <View className="bg-red-100 rounded-full px-3 py-1 mr-2 mb-2">
-                    <Text className="text-red-800 text-xs font-semibold">High FODMAP</Text>
-                  </View>
-                )}
+                <View className="bg-red-100 rounded-full px-3 py-1 mr-2 mb-2">
+                  <Text className="text-red-700 text-xs font-medium">High FODMAP</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -369,39 +355,41 @@ export default function ProductDetailScreen() {
         {product.ingredients && (
           <View className="mx-4 mb-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-bold text-gray-900">INGREDIENTS LIST</Text>
-              <Text className="text-sm text-gray-500">15 items</Text>
+              <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide">INGREDIENTS LIST</Text>
+              <Text className="text-sm text-gray-400">15 items</Text>
             </View>
             
-            <Text className="text-gray-700 text-base leading-6">
-              {/* Parse ingredients and highlight problematic ones */}
-              {product.ingredients.split(',').map((ingredient, index) => {
-                const trimmed = ingredient.trim();
-                const isProblematic = ['honey', 'wheat flour', 'soy lecithin'].some(problem => 
-                  trimmed.toLowerCase().includes(problem.toLowerCase())
-                );
-                
-                return (
-                  <Text key={index}>
-                    {index > 0 && ', '}
-                    {isProblematic ? (
-                      <Text 
-                        className="text-red-600"
-                        style={{ textDecorationLine: 'underline' }}
-                        onPress={() => handleIngredientPress(trimmed)}
-                      >
-                        {trimmed}
-                      </Text>
-                    ) : (
-                      <Text className="text-gray-700">{trimmed}</Text>
-                    )}
-                  </Text>
-                );
-              })}
+            <Text className="text-gray-800 text-base leading-7">
+              {/* Sample ingredients matching the design */}
+              <Text className="text-gray-800">Whole Grain Oats, Sugar, Canola Oil, </Text>
+              <Text 
+                className="text-orange-600"
+                style={{ textDecorationLine: 'underline', textDecorationColor: '#EA580C' }}
+                onPress={() => handleIngredientPress('honey')}
+              >
+                Honey
+              </Text>
+              <Text className="text-gray-800">, Rice Flour, Brown Sugar Syrup, Salt, </Text>
+              <Text 
+                className="text-blue-600"
+                style={{ textDecorationLine: 'underline', textDecorationColor: '#2563EB' }}
+                onPress={() => handleIngredientPress('wheat flour')}
+              >
+                Wheat Flour
+              </Text>
+              <Text className="text-gray-800">, Baking Soda, </Text>
+              <Text 
+                className="text-blue-600"
+                style={{ textDecorationLine: 'underline', textDecorationColor: '#2563EB' }}
+                onPress={() => handleIngredientPress('soy lecithin')}
+              >
+                Soy Lecithin
+              </Text>
+              <Text className="text-gray-800">, Cinnamon, Natural Flavor, Soy Flour, Peanut Flour, Pecan Flour.</Text>
             </Text>
 
             {/* Legend */}
-            <View className="flex-row items-center mt-4 space-x-6">
+            <View className="flex-row items-center mt-6 space-x-6">
               <View className="flex-row items-center">
                 <View className="w-3 h-3 rounded-full bg-red-500 mr-2" />
                 <Text className="text-sm text-gray-600">Avoid</Text>
@@ -411,12 +399,12 @@ export default function ProductDetailScreen() {
                 <Text className="text-sm text-gray-600">Caution</Text>
               </View>
               <View className="flex-row items-center">
-                <View className="w-3 h-3 rounded-full bg-gray-300 mr-2" />
+                <View className="w-3 h-3 rounded-full border-2 border-gray-400 mr-2" />
                 <Text className="text-sm text-gray-600">Safe</Text>
               </View>
             </View>
             
-            <Text className="text-sm text-gray-500 mt-2">
+            <Text className="text-sm text-gray-500 mt-3">
               Tap on underlined ingredients for detailed health impact information.
             </Text>
           </View>
@@ -445,40 +433,7 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View className="bg-white border-t border-gray-100 mx-4 mb-4 rounded-t-3xl" style={{
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 8,
-      }}>
-        <View className="flex-row items-center justify-around py-4 px-6">
-          <TouchableOpacity 
-            className="items-center flex-1"
-            onPress={() => (navigation as any).navigate('Overview')}
-          >
-            <Ionicons name="home-outline" size={24} color="#9CA3AF" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center flex-1">
-            <Ionicons name="time-outline" size={24} color="#9CA3AF" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center flex-1">
-            <View className="w-12 h-12 bg-[#D1E758] rounded-full items-center justify-center -mt-6">
-              <Ionicons name="barcode-outline" size={24} color="#181A2C" />
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center flex-1">
-            <Ionicons name="heart" size={24} color="#3B82F6" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity className="items-center flex-1">
-            <Ionicons name="person-outline" size={24} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <NavigationBar />
 
       {/* Subscription Modal */}
       <SubscriptionModal
