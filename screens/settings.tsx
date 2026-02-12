@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -35,12 +35,10 @@ interface SafeFoodItem {
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { logout, darkMode, toggleDarkMode, user, updateUser } = useAuth();
-  const { isPro, subscriptionPlan, subscriptionStatus, expiresAt } = useSubscription();
-  const [notifications, setNotifications] = useState(true);
+  const { logout, user, updateUser } = useAuth();
+  const { isPro } = useSubscription();
   const [pushAlerts, setPushAlerts] = useState(true);
   const [highSensitivityWarnings, setHighSensitivityWarnings] = useState(false);
-  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
   const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
   const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
   
@@ -81,14 +79,11 @@ export default function SettingsScreen() {
       );
 
       if (storedPreferences) {
-        setNotifications(storedPreferences.notifications);
         setPushAlerts(storedPreferences.notifications);
         setHighSensitivityWarnings(false);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
-    } finally {
-      setIsLoadingPreferences(false);
     }
   };
 
@@ -96,8 +91,8 @@ export default function SettingsScreen() {
     try {
       // Get current preferences
       const currentPreferences: UserPreferences = {
-        darkMode,
-        notifications,
+        darkMode: false,
+        notifications: pushAlerts,
         mealReminders: false,
         workoutReminders: false,
       };
@@ -121,13 +116,9 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleNotificationsToggle = async (value: boolean) => {
-    setNotifications(value);
-    await savePreferences({ notifications: value });
-  };
-
   const handlePushAlertsToggle = async (value: boolean) => {
     setPushAlerts(value);
+    await savePreferences({ notifications: value });
   };
 
   const handleHighSensitivityToggle = async (value: boolean) => {
@@ -175,9 +166,7 @@ export default function SettingsScreen() {
   };
 
   const handleDarkModeToggle = async () => {
-    toggleDarkMode();
-    // Save dark mode preference after toggle
-    await savePreferences({ darkMode: !darkMode });
+    // Dark mode functionality removed for now
   };
 
   // Use actual user data from AuthContext
@@ -187,7 +176,6 @@ export default function SettingsScreen() {
     phone: user?.phoneNumber || 'Not set',
     memberSince: user?.createdAt ? new Date(user.createdAt).getFullYear().toString() : '2023',
     version: 'v2.4.0',
-    plan: isPro ? (subscriptionPlan?.name || 'hungrr Pro') : 'Free',
   };
 
   const getSelectedRestrictionsCount = () => {
@@ -200,16 +188,25 @@ export default function SettingsScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      'Sign Out',
+      'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Logout',
+          text: 'Sign Out',
           style: 'destructive',
-          onPress: () => {
-            logout();
-            (navigation as any).navigate('Login');
+          onPress: async () => {
+            try {
+              await logout();
+              // Navigate to login screen
+              (navigation as any).reset({
+                index: 0,
+                routes: [{ name: 'Welcome' }],
+              });
+            } catch (error) {
+              console.error('Error during logout:', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
           },
         },
       ]
@@ -231,39 +228,6 @@ export default function SettingsScreen() {
       console.error('Error updating profile:', error);
       throw error;
     }
-  };
-
-  const handleManageSubscription = () => {
-    Alert.alert(
-      'Manage Subscription',
-      'To manage your subscription, please visit your App Store or Google Play subscription settings.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Open Settings',
-          onPress: () => {
-            // Open app store subscription management
-            // For iOS: itms-apps://apps.apple.com/account/subscriptions
-            // For Android: https://play.google.com/store/account/subscriptions
-            Linking.openURL('https://apps.apple.com/account/subscriptions');
-          },
-        },
-      ]
-    );
-  };
-
-  // Format expiry date if subscription is cancelled
-  const getExpiryText = () => {
-    if (subscriptionStatus === 'cancelled' && expiresAt) {
-      const expiryDate = new Date(expiresAt);
-      const formattedDate = expiryDate.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      });
-      return `Access until ${formattedDate}`;
-    }
-    return null;
   };
 
   return (
@@ -411,7 +375,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Safe Foods History */}
-        <View className="bg-white mx-6 rounded-2xl mb-24 overflow-hidden">
+        <View className="bg-white mx-6 rounded-2xl mb-6 overflow-hidden">
           <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
             <Text className="text-gray-900 text-lg font-semibold">SAFE FOODS HISTORY</Text>
             <TouchableOpacity onPress={clearSafeFoodsHistory}>
@@ -435,6 +399,54 @@ export default function SettingsScreen() {
           
           <TouchableOpacity className="p-4 border-t border-gray-100">
             <Text className="text-center text-gray-400 text-sm">VIEW COMPLETE DATA LOG</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Account Actions */}
+        <View className="bg-white mx-6 rounded-2xl mb-24 overflow-hidden">
+          <View className="p-4 border-b border-gray-100">
+            <Text className="text-gray-900 text-lg font-semibold">ACCOUNT</Text>
+          </View>
+          
+          <TouchableOpacity 
+            className="flex-row items-center justify-between p-4 border-b border-gray-100"
+            onPress={handleEditProfile}
+          >
+            <View className="flex-row items-center">
+              <View className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center mr-3">
+                <Ionicons name="person-outline" size={16} color="#6B7280" />
+              </View>
+              <Text className="text-gray-900 font-medium">Edit Profile</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          {!isPro && (
+            <TouchableOpacity 
+              className="flex-row items-center justify-between p-4 border-b border-gray-100"
+              onPress={() => setIsSubscriptionModalVisible(true)}
+            >
+              <View className="flex-row items-center">
+                <View className="w-8 h-8 bg-yellow-100 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="star" size={16} color="#F59E0B" />
+                </View>
+                <Text className="text-gray-900 font-medium">Upgrade to Premium</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity 
+            className="flex-row items-center justify-between p-4"
+            onPress={handleLogout}
+          >
+            <View className="flex-row items-center">
+              <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center mr-3">
+                <Ionicons name="log-out-outline" size={16} color="#EF4444" />
+              </View>
+              <Text className="text-red-600 font-medium">Sign Out</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </ScrollView>

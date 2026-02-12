@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import ScanLimiterService from '../services/scan-limiter';
 import { apiClient, Product } from '../services/api';
 import { NavigationBar } from 'components/NavigationBar';
+import { Header } from 'components/Header';
 
 interface DashboardDataResponse {
   recentScans: Product[];
@@ -97,17 +98,7 @@ export default function Overview() {
           {/* Header */}
           <View className="px-6 pt-12 pb-6">
             {/* Logo and notification */}
-            <View className="flex-row items-center justify-between mb-8">
-              <View className="flex-row items-center">
-                <View className="w-8 h-8 bg-[#D1E758] rounded-lg items-center justify-center mr-3">
-                  <Text className="text-black font-bold text-lg">h</Text>
-                </View>
-                <Text className="text-2xl font-bold text-black">hungrr</Text>
-              </View>
-              <TouchableOpacity className="w-10 h-10 items-center justify-center">
-                <Ionicons name="notifications-outline" size={24} color="#2d3436" />
-              </TouchableOpacity>
-            </View>
+            <Header />
 
             {/* Main heading */}
             <View className="mb-6">

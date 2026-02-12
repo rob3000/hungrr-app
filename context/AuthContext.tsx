@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AppState, AppStateStatus, Alert } from 'react-native';
 import { apiClient } from '../services/api';
 import { storage, STORAGE_KEYS } from '../services/storage';
+import { logger } from '../services/logger';
 
 export interface UserProfile {
   id: string;
@@ -48,7 +50,68 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     loadSession();
     loadDarkModePreference();
+    
+    // Set up token expiration callback
+    apiClient.setTokenExpiredCallback(async () => {
+      logger.warn('Token expired via API callback, logging out');
+      await logout();
+      Alert.alert(
+        'Session Expired',
+        'Your session has expired. Please log in again.',
+        [{ text: 'OK' }]
+      );
+    });
   }, []);
+
+  // Periodic token validation check
+  useEffect(() => {
+    if (!isLoggedIn || !token) {
+      return;
+    }
+
+    const checkTokenPeriodically = async () => {
+      const isValid = await apiClient.checkTokenValidity();
+      if (!isValid) {
+        logger.warn('Token validation failed, logging out');
+        await logout();
+        Alert.alert(
+          'Session Expired',
+          'Your session has expired. Please log in again.',
+          [{ text: 'OK' }]
+        );
+      }
+    };
+
+    // Check token validity every 5 minutes
+    const interval = setInterval(checkTokenPeriodically, 5 * 60 * 1000);
+
+    // Also check immediately when the effect runs
+    checkTokenPeriodically();
+
+    return () => clearInterval(interval);
+  }, [isLoggedIn, token]);
+
+  // Check token when app comes to foreground
+  useEffect(() => {
+    if (!isLoggedIn || !token) {
+      return;
+    }
+
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        logger.debug('App became active, checking token validity');
+        const isValid = await apiClient.checkTokenValidity();
+        if (!isValid) {
+          logger.warn('Token validation failed on app resume, logging out');
+          await logout();
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => subscription?.remove();
+  }, [isLoggedIn, token]);
 
   const loadDarkModePreference = async () => {
     try {

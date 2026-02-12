@@ -180,6 +180,7 @@ export interface PurchaseSubscriptionResponse {
 class APIClient {
   private baseURL: string;
   private token: string | null = null;
+  private onTokenExpired?: () => void;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -191,6 +192,26 @@ class APIClient {
 
   getToken(): string | null {
     return this.token;
+  }
+
+  setTokenExpiredCallback(callback: () => void) {
+    this.onTokenExpired = callback;
+  }
+
+  /**
+   * Check if token is expired by making a lightweight API call
+   */
+  async checkTokenValidity(): Promise<boolean> {
+    if (!this.token) {
+      return false;
+    }
+
+    try {
+      const response = await this.get('/me');
+      return response.success;
+    } catch (error) {
+      return false;
+    }
   }
 
   private getHeaders(): HeadersInit {
@@ -206,6 +227,21 @@ class APIClient {
   }
 
   private async handleResponse<T>(response: Response): Promise<APIResponse<T>> {
+    // Check for token expiration (401 Unauthorized)
+    if (response.status === 401 && this.token) {
+      logger.warn('Token expired, triggering logout');
+      if (this.onTokenExpired) {
+        this.onTokenExpired();
+      }
+      return {
+        success: false,
+        error: {
+          code: 'TOKEN_EXPIRED',
+          message: 'Your session has expired. Please log in again.',
+        },
+      };
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({
         error: {

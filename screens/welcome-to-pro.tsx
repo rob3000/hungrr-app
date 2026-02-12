@@ -112,7 +112,7 @@ export default function WelcomeToProScreen() {
           className="bg-[#2D5F4F] rounded-2xl py-4 flex-row items-center justify-center"
           onPress={handleLetsGo}
         >
-          <Text className="text-white font-semibold text-lg mr-2">Let's Go</Text>
+          <Text className="text-white font-semibold text-lg mr-2">Let&apos;s Go</Text>
           <Ionicons name="arrow-forward" size={20} color="white" />
         </TouchableOpacity>
       </View>
