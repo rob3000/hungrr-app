@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, Scro
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../services/api';
+import { GridBackground } from 'components/GridBackground';
+import { Header, Logo, LogoDark } from 'components/Header';
 
 export default function SignupScreen() {
   const navigation = useNavigation();
@@ -94,6 +96,7 @@ export default function SignupScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-[#D1E758]"
     >
+      <GridBackground />
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* Back Button */}
         <View className="px-6 pt-12">
@@ -108,14 +111,10 @@ export default function SignupScreen() {
 
         {/* Header */}
         <View className="items-center px-6 pb-8">
-          <View className="flex-row items-center mb-12">
-            <View className="w-8 h-8 bg-black rounded-lg items-center justify-center mr-3">
-              <Image source={require('../assets/logo-dark.png')} className="w-5 h-5" resizeMode="contain" />
-            </View>
-            <Text className="text-2xl font-bold text-black">hungrr</Text>
-          </View>
           
-          <Text className="text-3xl font-bold text-black mb-2">Create Account</Text>
+          <LogoDark />
+          
+          <Text className="text-3xl font-bold text-black mb-2 mt-6">Create Account</Text>
           <Text className="text-black/70 text-center text-lg mb-8">
             Join hungrr to discover IBS-safe foods
           </Text>

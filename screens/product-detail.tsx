@@ -49,6 +49,11 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<null | Product>(productParam)
   console.info('THE PRODUCT!', product, barcode)
 
+  if (!product) {
+    navigation.navigate("ProductNotFound")
+    return
+  }
+
   // If we have a barcode, we should fetch the data.
   useEffect(() => {
     if (barcode) {
@@ -183,85 +188,6 @@ export default function ProductDetailScreen() {
       setIsIngredientModalVisible(true);
     }
   };
-
-  if (!product) {
-    return (
-      <View className="flex-1" style={{ backgroundColor: '#D1E758' }}>
-        {/* Header */}
-        <View className="flex-row items-center justify-between p-4 pt-12" style={{ backgroundColor: '#D1E758' }}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="w-10 h-10 items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={24} color="#181A2C" />
-          </TouchableOpacity>
-          <Text className="text-lg font-semibold text-[#181A2C]">Scan Result</Text>
-          <View className="w-10" />
-        </View>
-
-        {/* Content Card */}
-        <View className="flex-1 px-4 pt-8">
-          <View className="bg-white rounded-3xl p-8 items-center" style={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 8,
-          }}>
-            {/* Search Icon with Question Mark */}
-            <View className="relative mb-8">
-              <View className="w-20 h-20 items-center justify-center">
-                <Ionicons name="search-outline" size={48} color="#9CA3AF" />
-              </View>
-              <View className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#D1E758] rounded-full items-center justify-center">
-                <Text className="text-[#181A2C] font-bold text-lg">?</Text>
-              </View>
-            </View>
-
-            {/* Title */}
-            <Text className="text-2xl font-bold text-[#181A2C] mb-4 text-center">
-              Product Not Found
-            </Text>
-
-            {/* Description */}
-            <Text className="text-gray-600 text-center mb-8 leading-6">
-              We couldn't find this item in our database.{'\n'}
-              You can try scanning the ingredients list{'\n'}
-              directly or search for individual{'\n'}
-              ingredients.
-            </Text>
-
-            {/* Action Buttons */}
-            <View className="w-full space-y-4">
-              <TouchableOpacity 
-                className="bg-[#181A2C] rounded-2xl py-4 items-center flex-row justify-center"
-                onPress={() => (navigation as any).navigate('Camera')}
-              >
-                <Ionicons name="scan-outline" size={20} color="#FFFFFF" className="mr-2" />
-                <Text className="text-white font-semibold text-lg ml-2">Scan Ingredients</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                className="bg-transparent rounded-2xl py-4 items-center flex-row justify-center"
-                onPress={() => (navigation as any).navigate('Search')}
-              >
-                <Ionicons name="search-outline" size={20} color="#181A2C" className="mr-2" />
-                <Text className="text-[#181A2C] font-semibold text-lg ml-2">Search Manually</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Tip */}
-          <Text className="text-center text-[#181A2C] mt-6 opacity-80">
-            Tip: Ensure the barcode is clear and well-lit{'\n'}when scanning.
-          </Text>
-        </View>
-
-        {/* Bottom Navigation */}
-        <NavigationBar />
-      </View>
-    );
-  }
 
   const safetyRating = (product.safety_rating?.toUpperCase() ?? 'UNKNOWN') as keyof typeof SAFETY_COLORS;
   const productIsSaved = isSaved(product.id);

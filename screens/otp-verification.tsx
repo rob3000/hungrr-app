@@ -247,35 +247,47 @@ export default function OTPVerificationScreen() {
               shadowRadius: 12,
               elevation: 8,
             }}>
-              {/* Email Icon */}
+              {/* Lock Icon */}
               <View className="items-center mb-8">
-                <View className="w-16 h-16 bg-[#D1E758]/20 rounded-full items-center justify-center">
-                  <Ionicons name="mail-outline" size={32} color="#2d3436" />
+                <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center">
+                  <Ionicons name="lock-closed" size={32} color="#2d3436" />
                 </View>
               </View>
 
               {/* Title and Description */}
               <View className="items-center mb-8">
-                <Text className="text-2xl font-bold text-black mb-3">
-                  Verify your email
+                <Text className="text-2xl font-bold text-black mb-4">
+                  Verify your email address
                 </Text>
-                <Text className="text-gray-600 text-center mb-2">
-                  We've sent a 6-digit code to your email.
-                </Text>
-                <Text className="text-black font-semibold text-center">
-                  {email}
+                <Text className="text-gray-500 text-center leading-5">
+                  Use the code below to verify your email{'\n'}address and start scanning products.
                 </Text>
               </View>
 
-              {/* OTP Input Fields */}
+              {/* OTP Display */}
               <View className="mb-8">
-                <View className="flex-row justify-between mb-4">
+                <TouchableOpacity 
+                  onPress={() => inputRefs.current[0]?.focus()}
+                  activeOpacity={0.7}
+                >
+                  <View className="flex-row justify-center items-center mb-6">
+                    {otp.map((digit, index) => (
+                      <React.Fragment key={index}>
+                        <Text className="text-5xl font-bold text-black mx-2">
+                          {digit || ' '}
+                        </Text>
+                        {index === 2 && <View className="w-6" />}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+
+                {/* Hidden input fields for functionality */}
+                <View className="flex-row justify-between opacity-0 absolute">
                   {otp.map((digit, index) => (
                     <View
                       key={index}
-                      className={`w-12 h-12 rounded-xl border-2 items-center justify-center ${
-                        digit ? 'border-black bg-gray-50' : 'border-gray-300 bg-white'
-                      } ${error ? 'border-red-500' : ''}`}
+                      className="w-12 h-12"
                     >
                       <TextInput
                         ref={(ref) => {
@@ -295,6 +307,13 @@ export default function OTPVerificationScreen() {
                   ))}
                 </View>
 
+                {/* Timer */}
+                <View className="items-center mb-4">
+                  <Text className="text-gray-500 text-sm">
+                    This code will expire in <Text className="font-semibold text-black">10 minutes</Text>
+                  </Text>
+                </View>
+
                 {error && (
                   <View className="flex-row items-center justify-center">
                     <Ionicons name="alert-circle" size={16} color="#EF4444" />
@@ -303,28 +322,10 @@ export default function OTPVerificationScreen() {
                 )}
               </View>
 
-              {/* Resend Code */}
-              <View className="items-center mb-8">
-                <Text className="text-gray-600 mb-2">Didn't receive the code?</Text>
-                {canResend ? (
-                  <TouchableOpacity onPress={handleResendOTP} disabled={isLoading}>
-                    <Text className="text-black font-semibold text-base">
-                      Resend Code
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View className="items-center">
-                    <Text className="text-black font-semibold">Resend Code</Text>
-                    <Text className="text-gray-500 text-sm">
-                      Resend code in 00:{resendTimer.toString().padStart(2, '0')}
-                    </Text>
-                  </View>
-                )}
-              </View>
 
-              {/* Verify Button */}
+              {/* Open App Button */}
               <TouchableOpacity
-                className={`rounded-3xl py-4 items-center flex-row justify-center ${
+                className={`rounded-3xl py-4 items-center flex-row justify-center mb-6 ${
                   isLoading || otp.join('').length !== 6 ? 'bg-gray-400' : 'bg-[#2d3436]'
                 }`}
                 onPress={() => handleVerifyOTP()}
@@ -333,25 +334,42 @@ export default function OTPVerificationScreen() {
                 {isLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <>
-                    <Text className="text-white font-semibold text-lg mr-2">Verify</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-                  </>
+                  <Text className="text-white font-semibold text-lg">Open App</Text>
                 )}
               </TouchableOpacity>
+
+              {/* Disclaimer */}
+              <View className="items-center">
+                <Text className="text-gray-500 text-sm text-center leading-5">
+                  If you didn't request this email, you can safely ignore{'\n'}it.
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Back to Login */}
-          <View className="px-6 pb-8">
-            <TouchableOpacity 
-              className="flex-row items-center justify-center"
-              onPress={() => navigation.goBack()}
-              disabled={isLoading}
-            >
-              <Ionicons name="arrow-back" size={20} color="#2d3436" />
-              <Text className="text-black font-semibold text-base ml-2">Back to Login</Text>
-            </TouchableOpacity>
+          {/* Footer */}
+          <View className="items-center px-6 pb-8">
+            {/* Social Links */}
+            <View className="flex-row justify-center space-x-8 mb-4">
+              <Text className="text-gray-600 font-medium">FB</Text>
+              <Text className="text-gray-600 font-medium">TW</Text>
+              <Text className="text-gray-600 font-medium">IG</Text>
+            </View>
+
+            {/* Copyright */}
+            <Text className="text-gray-500 text-sm text-center mb-2">
+              © 2024 Hungrr Inc. All rights reserved.
+            </Text>
+            <Text className="text-gray-500 text-sm text-center mb-4">
+              123 Health Valley, San Francisco, CA 94105
+            </Text>
+
+            {/* Links */}
+            <View className="flex-row justify-center space-x-4">
+              <Text className="text-gray-600 text-sm">Privacy Policy</Text>
+              <Text className="text-gray-500 text-sm">•</Text>
+              <Text className="text-gray-600 text-sm">Help Center</Text>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

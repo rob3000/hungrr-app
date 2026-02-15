@@ -14,15 +14,18 @@ import RecipeDetail from '../screens/recipe-detail';
 import ProductDetail from '../screens/product-detail';
 import IngredientDetail from '../screens/ingredient-detail';
 import AddProduct from '../screens/add-product';
+import ProductNotFound from '../screens/product-not-found';
 import Settings from '../screens/settings';
 import SavedItems from '../screens/saved-items';
 import Checkout from '../screens/checkout';
 import WelcomeToPro from '../screens/welcome-to-pro';
 import Search from '../screens/search';
-import { BackButton } from '../components/BackButton';
 import { CustomHeader } from '../components/CustomHeader';
 
 const Stack = createStackNavigator({
+  screenOptions: {
+    animation: 'none'
+  },
   screens: {
     Welcome: {
       screen: Welcome,
@@ -111,6 +114,12 @@ const Stack = createStackNavigator({
         headerShown: false,
       },
     },
+    ProductNotFound: {
+      screen: ProductNotFound,
+      options: {
+        headerShown: false,
+      },
+    },
     SavedItems: {
       screen: SavedItems,
       options: {
@@ -136,15 +145,9 @@ const Stack = createStackNavigator({
     },
     Settings: {
       screen: Settings,
-      options: ({ navigation }) => ({
-        header: () => (
-          <CustomHeader 
-            title="Settings" 
-            onBackPress={navigation.goBack}
-            showBackButton={true}
-          />
-        ),
-      }),
+      options: {
+        headerShown: false,
+      },
     },
     Checkout: {
       screen: Checkout,

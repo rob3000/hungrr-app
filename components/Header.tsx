@@ -2,6 +2,17 @@ import { View, Text, TouchableOpacity, Image } from "react-native"
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
+export const LogoDark = ({className}: {className?: string}) => {
+    return (
+        <View className={"flex-row items-center" + className}>
+            <View className="w-10 h-10 bg-black rounded-lg items-center justify-center mr-3">
+                <Image source={require('../assets/logo-dark.png')} className="w-6 h-6" resizeMode="contain" />
+            </View>
+            <Text className="text-2xl font-bold text-black">hungrr</Text>
+        </View>
+    )
+}
+
 export const Header = () => {
     const { darkMode } = useAuth();
 

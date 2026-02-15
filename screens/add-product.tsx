@@ -71,26 +71,23 @@ export default function AddProductScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#374151" />
           </TouchableOpacity>
-          <Text className="text-lg font-semibold text-gray-900">Product Not Found</Text>
+          <Text className="text-lg font-semibold text-gray-900">Add Product</Text>
           <View className="w-10" />
         </View>
       </View>
 
-      {/* Empty State */}
+      {/* Content */}
       <View className="flex-1 items-center justify-center px-6">
         {/* Icon Container */}
         <View className="items-center mb-8">
           <View className="w-32 h-32 bg-gray-100 rounded-full items-center justify-center mb-4">
-            <Ionicons name="search" size={48} color="#9CA3AF" />
-            <View className="absolute bottom-6 right-6 w-12 h-12 bg-orange-100 rounded-full items-center justify-center">
-              <Ionicons name="help" size={24} color="#F59E0B" />
-            </View>
+            <Ionicons name="add" size={48} color="#9CA3AF" />
           </View>
         </View>
 
         {/* Message */}
         <Text className="text-2xl font-bold text-gray-900 text-center mb-3">
-          Product Not Found
+          Add New Product
         </Text>
         <Text className="text-base text-gray-600 text-center mb-2 px-4">
           We couldn't find this item in our database, but we can analyze it for you

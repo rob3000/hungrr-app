@@ -26,16 +26,25 @@ export default function EditProfileModal({
   user,
   onSave,
 }: EditProfileModalProps) {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber || '');
-  const [profileImage, setProfileImage] = useState(user.profileImage || '');
+
+  if (!user) {
+    return null
+  }
+
+  const [firstName, setFirstName] = useState(user?.first_name ?? null);
+  const [lastName, setLastName] = useState(user?.last_name ?? null);
+  const [email, setEmail] = useState(user?.email ?? null);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     // Validate inputs
-    if (!name.trim()) {
-      Alert.alert('Validation Error', 'Name is required');
+    if (!firstName.trim()) {
+      Alert.alert('Validation Error', 'FirstName is required');
+      return;
+    }
+
+    if (!lastName.trim()) {
+      Alert.alert('Validation Error', 'LastName is required');
       return;
     }
 
@@ -55,10 +64,9 @@ export default function EditProfileModal({
       setIsSaving(true);
 
       const updatedFields: Partial<UserProfile> = {
-        name: name.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         email: email.trim(),
-        phoneNumber: phoneNumber.trim() || undefined,
-        profileImage: profileImage.trim() || undefined,
       };
 
       await onSave(updatedFields);
@@ -75,43 +83,10 @@ export default function EditProfileModal({
 
   const handleCancel = () => {
     // Reset to original values
-    setName(user.name);
+    setFirstName(user.first_name);
+    setLastName(user.last_name);
     setEmail(user.email);
-    setPhoneNumber(user.phoneNumber || '');
-    setProfileImage(user.profileImage || '');
     onClose();
-  };
-
-  const handleChangePhoto = () => {
-    Alert.alert(
-      'Change Photo',
-      'Photo upload feature coming soon! For now, you can enter an image URL.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Enter URL',
-          onPress: () => {
-            Alert.prompt(
-              'Profile Image URL',
-              'Enter the URL of your profile image:',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Save',
-                  onPress: (url?: string) => {
-                    if (url) {
-                      setProfileImage(url);
-                    }
-                  },
-                },
-              ],
-              'plain-text',
-              profileImage
-            );
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -140,38 +115,30 @@ export default function EditProfileModal({
         </View>
 
         <ScrollView className="flex-1">
-          {/* Profile Photo */}
-          <View className="bg-white py-6 items-center border-b border-gray-200">
-            <View className="relative">
-              <Image
-                source={{
-                  uri: profileImage || 'https://via.placeholder.com/120',
-                }}
-                className="w-24 h-24 rounded-full"
-              />
-              <TouchableOpacity
-                className="absolute bottom-0 right-0 w-8 h-8 bg-orange-400 rounded-full items-center justify-center"
-                onPress={handleChangePhoto}
-                disabled={isSaving}
-              >
-                <Ionicons name="camera" size={16} color="white" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity onPress={handleChangePhoto} disabled={isSaving}>
-              <Text className="text-orange-500 font-medium mt-3">Change Photo</Text>
-            </TouchableOpacity>
-          </View>
 
           {/* Form Fields */}
           <View className="mx-6 mt-6">
             {/* Name */}
             <View className="mb-4">
-              <Text className="text-gray-700 font-medium mb-2">Full Name</Text>
+              <Text className="text-gray-700 font-medium mb-2">First Name</Text>
               <View className="bg-white rounded-xl border border-gray-200 px-4 py-3">
                 <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter your name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Enter your firstname"
+                  className="text-gray-900 text-base"
+                  editable={!isSaving}
+                />
+              </View>
+            </View>
+
+            <View className="mb-4">
+              <Text className="text-gray-700 font-medium mb-2">Last Name</Text>
+              <View className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+                <TextInput
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Enter your lastname"
                   className="text-gray-900 text-base"
                   editable={!isSaving}
                 />
@@ -188,21 +155,6 @@ export default function EditProfileModal({
                   placeholder="Enter your email"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  className="text-gray-900 text-base"
-                  editable={!isSaving}
-                />
-              </View>
-            </View>
-
-            {/* Phone */}
-            <View className="mb-4">
-              <Text className="text-gray-700 font-medium mb-2">Phone Number</Text>
-              <View className="bg-white rounded-xl border border-gray-200 px-4 py-3">
-                <TextInput
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  placeholder="Enter your phone number"
-                  keyboardType="phone-pad"
                   className="text-gray-900 text-base"
                   editable={!isSaving}
                 />

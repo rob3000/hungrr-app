@@ -128,7 +128,7 @@ export default function CameraScreen() {
         }
         
         setTimeout(() => {
-          (navigation as any).navigate('AddProduct', { barcode: barcodeValue });
+          (navigation as any).navigate('ProductNotFound', { barcode: barcodeValue });
           setIsProcessing(false);
           setScanFeedback('');
         }, 500);
@@ -209,7 +209,7 @@ export default function CameraScreen() {
         }
         
         setTimeout(() => {
-          (navigation as any).navigate('AddProduct', { barcode: manualBarcode.trim() });
+          (navigation as any).navigate('ProductNotFound', { barcode: manualBarcode.trim() });
           setIsProcessing(false);
           setScanFeedback('');
           setManualBarcode('');
@@ -227,72 +227,6 @@ export default function CameraScreen() {
     codeTypes: ['qr', 'ean-13', 'ean-8', 'code-128', 'code-39', 'upc-a', 'upc-e', 'code-93', 'codabar'],
     onCodeScanned: handleBarcodeScanned,
   });
-
-  const handleManualScan = async () => {
-    // Check if user can scan (for free users)
-    if (!isPro) {
-      const canScan = await ScanLimiterService.canScan(isPro);
-      
-      if (!canScan) {
-        // User has reached their scan limit
-        setShowSubscriptionModal(true);
-        return;
-      }
-    }
-    
-    // Demo scan with a known product barcode
-    const mockBarcode = '058449880011'; // Nature's Path Oats
-    
-    setIsProcessing(true);
-    setScanFeedback('Demo scanning...');
-    
-    try {
-      const response = await apiClient.scanProduct(mockBarcode);
-      
-      if (response.success && response.data) {
-        setScanFeedback('Product found!');
-        
-        // Decrement scan count for free users after successful scan
-        if (!isPro) {
-          const scansRemaining = await ScanLimiterService.decrementScans();
-          
-          // Show warning toast if 3 or fewer scans remaining
-          if (scansRemaining <= 3 && scansRemaining > 0) {
-            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
-          }
-        }
-        
-        setTimeout(() => {
-          (navigation as any).navigate('ProductDetail', { barcode: mockBarcode });
-          setIsProcessing(false);
-          setScanFeedback('');
-        }, 500);
-      } else {
-        setScanFeedback('Product not found');
-        
-        // Decrement scan count for free users even if product not found
-        if (!isPro) {
-          const scansRemaining = await ScanLimiterService.decrementScans();
-          
-          // Show warning toast if 3 or fewer scans remaining
-          if (scansRemaining <= 3 && scansRemaining > 0) {
-            showToast(`⚠️ ${scansRemaining} scan${scansRemaining === 1 ? '' : 's'} remaining today`);
-          }
-        }
-        
-        setTimeout(() => {
-          (navigation as any).navigate('AddProduct', { barcode: mockBarcode });
-          setIsProcessing(false);
-          setScanFeedback('');
-        }, 500);
-      }
-    } catch (error) {
-      console.error('Error in demo scan:', error);
-      Alert.alert('Error', 'Demo scan failed. Please try again.');
-      setIsProcessing(false);
-      setScanFeedback('');
-    }
-  };
 
   const handleOpenSettings = () => {
     Alert.alert(
@@ -355,19 +289,6 @@ export default function CameraScreen() {
         <Text className="text-white/80 text-base mb-8 text-center">
           We couldn't detect a camera on your device. You can try a demo scan or add products manually.
         </Text>
-        <TouchableOpacity
-          className="bg-orange-400 px-8 py-4 rounded-full mb-4 w-full"
-          onPress={handleManualScan}
-          disabled={isProcessing}
-        >
-          {isProcessing ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white font-semibold text-center text-lg">
-              Try Demo Scan
-            </Text>
-          )}
-        </TouchableOpacity>
         <TouchableOpacity
           className="bg-white/20 px-8 py-4 rounded-full w-full"
           onPress={() => navigation.goBack()}
@@ -436,8 +357,8 @@ export default function CameraScreen() {
           
           {/* Feedback text */}
           {scanFeedback ? (
-            <View className="mt-6 bg-orange-400/90 rounded-full px-6 py-3">
-              <Text className="text-white font-semibold text-center">
+            <View className="mt-6 bg-[#D1E758] rounded-full px-6 py-3">
+              <Text className="text-[#181A2C] font-semibold text-center">
                 {scanFeedback}
               </Text>
             </View>
@@ -452,21 +373,7 @@ export default function CameraScreen() {
         </View>
 
         {/* Bottom Controls */}
-        <View className="p-6 pb-8">
-          {/* <TouchableOpacity
-            className="bg-orange-400 py-4 rounded-full items-center mb-3"
-            onPress={handleManualScan}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white font-semibold text-lg">
-                Try Demo Scan
-              </Text>
-            )}
-          </TouchableOpacity> */}
-          
+        <View className="p-6 pb-8">          
           <TouchableOpacity
             className="bg-white/20 py-3 rounded-full items-center mb-3"
             onPress={() => setShowManualEntry(true)}
@@ -479,7 +386,7 @@ export default function CameraScreen() {
           
           <TouchableOpacity
             className="bg-white/10 py-3 rounded-full items-center"
-            onPress={() => (navigation as any).navigate('AddProduct', { barcode: 'manual-entry' })}
+            onPress={() => (navigation as any).navigate('ProductNotFound', { barcode: 'manual-entry' })}
             disabled={isProcessing}
           >
             <Text className="text-white font-medium">
@@ -520,13 +427,13 @@ export default function CameraScreen() {
             />
             
             <TouchableOpacity
-              className="bg-orange-400 py-4 rounded-full items-center"
+              className="bg-[#D1E758] py-4 rounded-full items-center"
               onPress={handleManualBarcodeSubmit}
               disabled={!manualBarcode.trim()}
               style={{ opacity: manualBarcode.trim() ? 1 : 0.5 }}
             >
-              <Text className="text-white font-semibold text-lg">
-                Look Up Product
+              <Text className="text-[#181A2C] font-semibold text-lg">
+                Find Product
               </Text>
             </TouchableOpacity>
           </View>

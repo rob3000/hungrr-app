@@ -7,6 +7,7 @@ import { logger } from '../services/logger';
 import { storage, STORAGE_KEYS } from '../services/storage';
 import DebugPanel from '../components/DebugPanel';
 import { GridBackground } from 'components/GridBackground';
+import { LogoDark } from 'components/Header';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -166,10 +167,7 @@ export default function LoginScreen() {
             }}
             className="flex-row items-center mb-16"
           >
-            <View className="w-8 h-8 bg-black rounded-lg items-center justify-center mr-3">
-              <Image source={require('../assets/logo-dark.png')} className="w-5 h-5" resizeMode="contain" />
-            </View>
-            <Text className="text-2xl font-bold text-black">hungrr</Text>
+            <LogoDark />
           </TouchableOpacity>
           
           <Text className="text-3xl font-bold text-black mb-2">Welcome Back</Text>

@@ -11,6 +11,7 @@ import SubscriptionModal from '../components/SubscriptionModal';
 import { NavigationBar } from '../components/NavigationBar';
 import { UserProfile } from '../context/AuthContext';
 import { handleAPIResponse, isTokenExpiredError } from '../utils/api-helpers';
+import { BackButton } from 'components/BackButton';
 
 interface UserPreferences {
   darkMode: boolean;
@@ -26,14 +27,6 @@ interface DietaryRestriction {
   priority?: boolean;
 }
 
-interface SafeFoodItem {
-  id: string;
-  name: string;
-  brand?: string;
-  tags: string[];
-  isVerified: boolean;
-}
-
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { logout, user, updateUser, darkMode, toggleDarkMode } = useAuth();
@@ -43,29 +36,11 @@ export default function SettingsScreen() {
   const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
   const [isSubscriptionModalVisible, setIsSubscriptionModalVisible] = useState(false);
   
-  // Dietary restrictions state
+  // Dietary restrictions state - @todo - come from api
   const [dietaryRestrictions, setDietaryRestrictions] = useState<DietaryRestriction[]>([
     { id: '1', name: 'Low FODMAP', enabled: true, priority: true },
     { id: '2', name: 'Gluten Free', enabled: false },
     { id: '3', name: 'Lactose Free', enabled: false },
-  ]);
-
-  // Safe foods history
-  const [safeFoods] = useState<SafeFoodItem[]>([
-    { 
-      id: '1', 
-      name: 'Oatly Barista Edition', 
-      brand: '2H XCD', 
-      tags: ['FODMAP SAFE'], 
-      isVerified: true 
-    },
-    { 
-      id: '2', 
-      name: 'Sourdough Spelt Bread', 
-      brand: 'YESTERDAY', 
-      tags: ['FODMAP SAFE'], 
-      isVerified: true 
-    },
   ]);
 
   // Load preferences on mount
@@ -140,47 +115,15 @@ export default function SettingsScreen() {
     );
   };
 
-  const addCustomRestriction = () => {
-    Alert.prompt(
-      'Add Custom Restriction',
-      'Enter the name of your dietary restriction:',
-      (text) => {
-        if (text && text.trim()) {
-          const newRestriction: DietaryRestriction = {
-            id: Date.now().toString(),
-            name: text.trim(),
-            enabled: true,
-          };
-          setDietaryRestrictions(prev => [...prev, newRestriction]);
-        }
-      }
-    );
-  };
-
-  const clearSafeFoodsHistory = () => {
-    Alert.alert(
-      'Clear History',
-      'Are you sure you want to clear your safe foods history?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Clear', style: 'destructive', onPress: () => {
-          // Implementation for clearing history
-        }},
-      ]
-    );
-  };
-
   const handleDarkModeToggle = async () => {
     toggleDarkMode();
   };
 
-  // Use actual user data from AuthContext
   const userData = {
-    name: user?.name || 'Sarah Jenkins',
-    email: user?.email || 'user@example.com',
-    phone: user?.phoneNumber || 'Not set',
-    memberSince: user?.createdAt ? new Date(user.createdAt).getFullYear().toString() : '2023',
-    version: 'v2.4.0',
+    firstName: user?.first_name,
+    lastName: user?.last_name,
+    email: user?.email,
+    memberSince: user?.createdAt ? new Date(user.createdAt).getFullYear().toString() : 'UNKOWN',
   };
 
   const getSelectedRestrictionsCount = () => {
@@ -246,32 +189,26 @@ export default function SettingsScreen() {
       throw error;
     }
   };
-
+  console.log(user)
   return (
-    <View className={`flex-1 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <View className={`flex-1 pt-4 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} pb-6 px-6`}>
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-gray-400 text-sm font-medium tracking-wider uppercase">
-              User Dashboard
-            </Text>
             <View className="flex-row items-center space-x-3">
-              <View className="bg-yellow-200 px-3 py-1 rounded-full">
-                <Text className="text-gray-800 text-xs font-medium">PREMIUM</Text>
+              <View className="bg-[#D1E758] px-3 py-1 rounded-full">
+                <Text className="text-gray-800 text-xs font-medium">{user?.plan ?? 'FREE'}</Text>
               </View>
-              <TouchableOpacity>
-                <Ionicons name="settings-outline" size={20} color="#9CA3AF" />
-              </TouchableOpacity>
             </View>
           </View>
 
           {/* Profile Info */}
           <View className="mb-4">
             <Text className="text-gray-400 text-xs font-medium mb-1">PROFILE NAME</Text>
-            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-2xl font-bold`}>{userData.name}</Text>
+            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-2xl font-bold`}>{userData.firstName}{userData.lastName}</Text>
             <Text className="text-gray-500 text-sm mt-1">
-              Member since {userData.memberSince} • {userData.version}
+              Member since {userData.memberSince}
             </Text>
           </View>
         </View>
@@ -326,14 +263,6 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             ))}
-            
-            <TouchableOpacity 
-              className={`flex-row items-center justify-center p-3 border border-dashed ${darkMode ? 'border-gray-600' : 'border-gray-300'} rounded-xl`}
-              onPress={addCustomRestriction}
-            >
-              <Ionicons name="add" size={16} color="#9CA3AF" />
-              <Text className="text-gray-400 font-medium ml-2">ADD CUSTOM</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Priority Notice */}
@@ -406,34 +335,6 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
-        </View>
-
-        {/* Safe Foods History */}
-        <View className={`${darkMode ? 'bg-gray-800' : 'bg-white'} mx-6 rounded-2xl mb-6 overflow-hidden`}>
-          <View className={`flex-row items-center justify-between p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-            <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} text-lg font-semibold`}>SAFE FOODS HISTORY</Text>
-            <TouchableOpacity onPress={clearSafeFoodsHistory}>
-              <Text className="text-gray-400 text-sm">CLEAR LOGS</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View className="p-4 space-y-3">
-            {safeFoods.map((food) => (
-              <View key={food.id} className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <Text className={`${darkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{food.name}</Text>
-                  <Text className="text-gray-500 text-sm">{food.brand} • {food.tags.join(', ')}</Text>
-                </View>
-                <View className="w-6 h-6 bg-lime-400 rounded-full items-center justify-center">
-                  <Ionicons name="checkmark" size={12} color="#374151" />
-                </View>
-              </View>
-            ))}
-          </View>
-          
-          <TouchableOpacity className={`p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-            <Text className="text-center text-gray-400 text-sm">VIEW COMPLETE DATA LOG</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Account Actions */}
